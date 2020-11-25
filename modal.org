@@ -26,6 +26,21 @@
 ** l  - move left one line
 ** u  - move right one word
 ** o  - move left one word
+** d  -  delete (trem-d)
+** M-d - kill word
+** f  - center
+** .  - scroll up
+** ,  - scroll down
+** h  - kill
+** c  - copy 
+** y  - yank
+** t  - undo
+** r  - repeat
+** g  - keyboard quit
+** x  - prefix for execute
+*** e  - emacs command
+*** s  - shell 
+*** p  - shell pipe
 ** n  - prefix for more complex navigation ("n" stands for "navigate")
 *** i  - beggining of buffer
 *** k  - end of buffer
@@ -33,16 +48,8 @@
 *** l  - end of line
 *** s  - isearch next item
 *** r  - isearch previous item
-** d   -  delete (trem-d)
-** M-d - kill word
-** h  - kill
-** c  - copy 
-** y  - yank
-** x  - execute prefix
-*** e  - emacs command
-*** s  - shell 
-*** p  - shell pipe
-** g  - keyboard quit
+*** n  - line number
+*** bm - bookmark 
 ** b  - prefix for buffer-related commands
 *** k  - kill buffer
 *** s  - save buffer
@@ -51,15 +58,32 @@
 ** s  - prefix for search menu
 *** s  - isearch forward
 *** r  - isearch backward
-** m  - prefix for marking and selection
-*** ...
+** m  - prefix for marking, selection and multiple cursors
+*** m - set mark
+*** b  - select whole buffer
+*** c  - prefix for cursors
+**** l - edit lines
+**** w - etit word like this
+**** n - insert numbers
+*** u  - mark until char
+*** s  - mark symbol
+*** w  - mark word
+*** l  - mark line
+*** ip - mark inside pairs
+*** op - mark outside pairs
+*** iq - mark inside quotes
+*** oq - mark outside quotes
 ** w  - prefix for window and frame related operations
 *** h - split horizontally
 *** v - split vertically 
-*** n - creane new frame
-*** c - close window
+*** n - create new frame
+*** c - close window (not frame)
 *** o - other window
 *** u - previous window
+** z  - prefix for replacement
+*** s - replace selection
+*** c - char
+** 0..9 - numeric argument
 
 * KEYS (draft)
 ** <menu> - enter or exit CMD mode
