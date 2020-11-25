@@ -359,6 +359,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
 
 ;; <<< BEGIN BINDINGS >>>
+
 ;;;###autoload
 (defun trem-setup-keybinds ()
   "Set up default trem keybindings for normal mode."
@@ -472,12 +473,6 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("8" "M-8" :norepeat t)
    ("9" "M-9" :norepeat t)
    ("-" "M--" :norepeat t)
-
-   ;; Unimpaired-like functionality
-   ("[" (("SPC" trem-insert-line-above)
-         ("p" trem-paste-above)))
-   ("]" (("SPC" trem-insert-line-below)
-         ("p" trem-paste-below)))
 
    ;; Multiple cursors
    ("s" mc/mark-all-in-region)

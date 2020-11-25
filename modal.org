@@ -1,0 +1,102 @@
+
+* TOOLS
+  
+** ryo is the mode foundation
+** text marking and editing primitives
+*** multiple cursors (mc) 
+*** standard regexp operations 
+*** expand region (er)
+** hydras to make C-... C-... commands accessible from my CMD mode
+** kakoune.el 
+   It's a great example of text edititng primitives. Study it and use it's code if it fits.
+
+* FEATURES
+** y/n instead of yes/no
+** ergonomic navigation and common commands
+   - movement with ijkl
+   - common command blocks have a prefix key for example "b" is a prefix for buffer-related commands
+** fast marking interactive marking with expand-region
+** multiple cursors optimizaiton with multiple-cursors
+
+
+* KEYS
+** i  - move up one line
+** j  - move left one char
+** k  - move down one line
+** l  - move left one line
+** u  - move right one word
+** o  - move left one word
+** n  - prefix for more complex navigation ("n" stands for "navigate")
+*** i  - beggining of buffer
+*** k  - end of buffer
+*** j  - beggining of line
+*** l  - end of line
+*** s  - isearch next item
+*** r  - isearch previous item
+** d   -  delete (trem-d)
+** M-d - kill word
+** h  - kill
+** c  - copy 
+** y  - yank
+** x  - execute prefix
+*** e  - emacs command
+*** s  - shell 
+*** p  - shell pipe
+** g  - keyboard quit
+** b  - prefix for buffer-related commands
+*** k  - kill buffer
+*** s  - save buffer
+*** g  - goto buffer
+*** l  - list buffers
+** s  - prefix for search menu
+*** s  - isearch forward
+*** r  - isearch backward
+** m  - prefix for marking and selection
+*** ...
+** w  - prefix for window and frame related operations
+*** h - split horizontally
+*** v - split vertically 
+*** n - creane new frame
+*** c - close window
+*** o - other window
+*** u - previous window
+
+* KEYS (draft)
+** <menu> - enter or exit CMD mode
+** space - mark region stupidly
+** ijkl - MOVEMENT
+** h - backward word
+** : - forward word
+** 0..9,- numeric arguments
+   ("0" "M-0" :norepeat t)
+   ("1" "M-1" :norepeat t)
+   ("2" "M-2" :norepeat t)
+   ("3" "M-3" :norepeat t)
+   ("4" "M-4" :norepeat t)
+   ("5" "M-5" :norepeat t)
+   ("6" "M-6" :norepeat t)
+   ("7" "M-7" :norepeat t)
+   ("8" "M-8" :norepeat t)
+   ("9" "M-9" :norepeat t)
+   ("-" "M--" :norepeat t)
+** o - delete
+** u - backspace
+** y - yank
+** m - start marking 
+*** w - mark word
+***  - mark inside pairs
+*** q - mark inside qoutes
+** p - paragraph/sexp object
+*** k - kill
+*** s - splice 
+** w - word object
+** b - buffer object
+*** s - save buffer
+*** k - kill buffer
+*** n - next buffer
+*** g - goto buffer 
+*** l - list buffers
+** s - start search
+** r - regexp
+*** r - replace
+** C-... - start entering C-... hydra
