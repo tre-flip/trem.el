@@ -139,10 +139,13 @@ effectively reverse the (problematic) order of two `trem-exchange' calls."
 
 ;; <<< BEGIN UTILITIES >>>
 
-(require 'cl-lib)
-(require 'ryo-modal)
-(require 'expand-region)
-(require 'multiple-cursors)
+;; extend it to scroll arbitrary amount of lines
+(defun trem-scroll-up ()
+  (interactive)
+  (scroll-up 2))
+(defun trem-scroll-down ()
+  (interactive)
+  (scroll-down 2))
 
 (defun trem-insert-mode () "Return to insert mode."
        (interactive)
@@ -280,14 +283,13 @@ but I like this behavior better."
     (progn (delete-region (point) (1+ (point)))
 	       (yank))))
 
-(defun trem-o (count)
+(defun trem-open-below (count)
   "Open COUNT lines under the cursor and go into insert mode."
   (interactive "p")
   (end-of-line)
   (dotimes (_ count)
     (electric-newline-and-maybe-indent)))
-
-(defun trem-O (count)
+(defun trem-open-above (count)
   "Open COUNT lines above the cursor and go into insert mode."
   (interactive "p")
   (beginning-of-line)
@@ -364,102 +366,52 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 (defun trem-setup-keybinds ()
   "Set up default trem keybindings for normal mode."
   (global-subword-mode 1)
+  
+  ;; setting special bindings for lisp mode
   (eval-after-load "text-mode"
     '(ryo-modal-major-mode-keys
-      'text-mode
-      ;; Region selectors
+      'lisp-mode
       (:mc-all t)
-      ("M-i" (("w" er/mark-word)
-              ("b" er/mark-inside-pairs)
-              ("'" er/mark-inside-quotes)
-              ("s" er/mark-text-sentence)
-              ("p" er/mark-text-paragraph)))
-      ("M-a" (("w" er/mark-symbol)
-              ("b" er/mark-outside-pairs)
-              ("'" er/mark-outside-quotes)
-              ("s" er/mark-text-sentence)
-              ("p" er/mark-text-paragraph)))))
-  ;; (ryo-modal-major-mode-keys
-  ;;  'prog-mode
-  ;;  ("b" trem-backward-same-syntax :first '(trem-set-mark-here))
-  ;;  ("B" trem-backward-same-syntax :first '(trem-set-mark-if-inactive))
-  ;;  ("w" forward-same-syntax :first '(trem-set-mark-here))
-  ;;  ("W" forward-same-syntax :first '(trem-set-mark-if-inactive)))
+      ("p" forward-char)))
   (ryo-modal-keys
    ;; Basic keybindings
    (:mc-all t)
-   ("a" forward-char :exit t)
-   ("A" move-end-of-line :exit t)
-   ("b" backward-word :first '(trem-set-mark-here))
-   ("B" backward-word :first '(trem-set-mark-if-inactive))
-   ("c" trem-d :exit t)
-   ("C" kill-line :exit t)
-   ("d" trem-d)
-   ("D" kill-line)
-   ("f" trem-select-to-char :first '(trem-set-mark-here))
-   ("F" trem-select-to-char :first '(trem-set-mark-if-inactive))
-   ;; use "g key" isntead of G
-   ("g" (("h" beginning-of-line)
-         ("j" end-of-buffer)
-         ("k" beginning-of-buffer)
-         ("g" trem-gg)
-         ("l" end-of-line)
-         ("i" back-to-indentation)) :first '(trem-deactivate-mark))
-   ("G" (("h" beginning-of-line)
-         ("j" end-of-buffer)
-         ("k" beginning-of-buffer)
-         ("g" trem-gg)
-         ("l" end-of-line)
-         ("i" back-to-indentation)) :first '(trem-set-mark-if-inactive))
-   ("g f" find-file-at-point)
-   ("G f" find-file-at-point)
-   ("g x" trem-exchange)
-   ("g X" trem-exchange-cancel)
-   ("h" backward-char :first '(trem-deactivate-mark))
-   ("H" backward-char :first '(trem-set-mark-if-inactive))
-   ("i" trem-insert-mode)
-   ("I" back-to-indentation :exit t)
-   ("j" next-line :first '(trem-deactivate-mark))
-   ("J" next-line :first '(trem-set-mark-if-inactive))
-   ("k" previous-line :first '(trem-deactivate-mark))
-   ("K" previous-line :first '(trem-set-mark-if-inactive))
-   ("l" forward-char :first '(trem-deactivate-mark))
-   ("L" forward-char :first '(trem-set-mark-if-inactive))
-   ("o" trem-o :exit t)
-   ("O" trem-O :exit t)
-   ("p" trem-p)
-   ("r" trem-replace-char)
-   ("R" trem-replace-selection)
-   ("t" trem-select-up-to-char :first '(trem-set-mark-here))
-   ("T" trem-select-up-to-char :first '(trem-set-mark-if-inactive))
-   ("w" forward-word :first '(trem-set-mark-here))
-   ("W" forward-word :first '(trem-set-mark-if-inactive))
-   ("M-w" forward-symbol :first '(trem-set-mark-here))
-   ("M-W" forward-symbol :first '(trem-set-mark-if-inactive))
-   ("x" trem-x)
-   ("X" trem-X)
-   ("y" kill-ring-save)
-   ("Y" trem-Y)
-   ("." trem-select-again :first '(trem-set-mark-if-inactive))
-   ("M-;" exchange-point-and-mark)
-   ("`" trem-downcase)
-   ("~" trem-upcase)
-   ("%" mark-whole-buffer)
-   ("M-j" trem-join)
-   ("[ [" backward-paragraph :first '(trem-set-mark-here))
-   ("] ]" forward-paragraph :first '(trem-set-mark-here))
-   (">" trem-indent-right)
-   ("<" trem-indent-left)
 
-   ;; Treat arrow keys the same as "hjkl"
-   ("<down>" next-line :first '(trem-deactivate-mark))
-   ("<S-down>" next-line :first '(trem-set-mark-if-inactive))
-   ("<up>" previous-line :first '(trem-deactivate-mark))
-   ("<S-up>" previous-line :first '(trem-set-mark-if-inactive))
-   ("<right>" forward-char :first '(trem-deactivate-mark))
-   ("<S-right>" forward-char :first '(trem-set-mark-if-inactive))
-   ("<left>" backward-char :first '(trem-deactivate-mark))
-   ("<S-left>" backward-char :first '(trem-set-mark-if-inactive))
+   ;; movement keys
+   ("i" prefious-line :norepeat t)
+   ("j" backward-char :norepeat t)
+   ("k" next-line     :norepeat t)
+   ("l" forward-char  :norepeat t)
+   ("o" forward-word  :norepeat t)
+   ("u" backward-word :norepeat t)
+
+   ;; recenter/focus, scrolling
+   ("f" recenter-top-bottom :norepeat t)
+   ("." trem-scroll-up :norepeat t)
+   ("," trem-scroll-down :norepeat t)
+
+   ;; killing/yanking, undoing, repeating
+   ("d" trem-d :norepeat t)
+   ("c" kill-ring-save :norepeat t)
+   ("y" yank :norepeat t)
+   ("t" undo :norepeat t)
+   ("r" ryo-repeat :norepeat t)
+   ("g" keyboard-quit :norepeat t)
+
+   ;; extended text manipulation (no marking or selection) <TODO>
+   ("e" (("i" trem-open-above)
+	 ("k" trem-open-below)))
+
+   ;; execution
+   ("x" (("e" execute-extended-command :norepeat)
+	 ("s" trem-shell-command :norepeat)
+	 ("p" trem-shell-pipe :norepeat)))
+
+   ;; navigation
+   ("n" (("i" beginning-of-buffer :norepeat t)
+	 ("k" end-of-buffer :norepeat t)
+	 ("j" beginniing-of-line :norepeat t)
+	 ("l" end-of-line :norepeat t)))
 
    ;; Numeric arguments
    ("0" "M-0" :norepeat t)
@@ -472,18 +424,12 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("7" "M-7" :norepeat t)
    ("8" "M-8" :norepeat t)
    ("9" "M-9" :norepeat t)
-   ("-" "M--" :norepeat t)
-
-   ;; Multiple cursors
-   ("s" mc/mark-all-in-region)
-   ("S" mc/split-region)
-
-   ;; Shell commands
-   ("|" trem-shell-pipe)
-   ("!" trem-shell-command))
+   ("-" "M--" :norepeat t))
 
   ;; put these here because they shouldn't be repeated for all cursors
   (ryo-modal-keys
+
+   ;; buffer commands
    ("[ b" previous-buffer)
    ("] b" next-buffer)))
 

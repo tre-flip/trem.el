@@ -2,11 +2,14 @@
 * TOOLS
   
 ** ryo is the mode foundation
+   - ryo can emulate key-presses, so "C-c C-c" is not a problem.
+
 ** text marking and editing primitives
 *** multiple cursors (mc) 
 *** standard regexp operations 
 *** expand region (er)
 ** hydras to make C-... C-... commands accessible from my CMD mode
+** whichkey for help buffer
 ** kakoune.el 
    It's a great example of text edititng primitives. Study it and use it's code if it fits.
 
@@ -20,70 +23,75 @@
 
 
 * KEYS
-** i  - move up one line
-** j  - move left one char
-** k  - move down one line
-** l  - move left one line
-** u  - move right one word
-** o  - move left one word
-** d  -  delete (trem-d)
-** M-d - kill word
-** f  - center
-** .  - scroll up
-** ,  - scroll down
-** h  - kill
-** c  - copy 
-** y  - yank
-** t  - undo
-** r  - repeat
-** g  - keyboard quit
-** x  - prefix for execute
-*** e  - emacs command
-*** s  - shell 
-*** p  - shell pipe
-** n  - prefix for more complex navigation ("n" stands for "navigate")
-*** i  - beggining of buffer
-*** k  - end of buffer
-*** j  - beggining of line
-*** l  - end of line
-*** s  - isearch next item
-*** r  - isearch previous item
-*** n  - line number
-*** bm - bookmark 
-** b  - prefix for buffer-related commands
-*** k  - kill buffer
-*** s  - save buffer
-*** g  - goto buffer
-*** l  - list buffers
-** s  - prefix for search menu
-*** s  - isearch forward
-*** r  - isearch backward
-** m  - prefix for marking, selection and multiple cursors
-*** m - set mark
-*** b  - select whole buffer
-*** c  - prefix for cursors
-**** l - edit lines
-**** w - etit word like this
-**** n - insert numbers
-*** u  - mark until char
-*** s  - mark symbol
-*** w  - mark word
-*** l  - mark line
-*** ip - mark inside pairs
-*** op - mark outside pairs
-*** iq - mark inside quotes
-*** oq - mark outside quotes
-** w  - prefix for window and frame related operations
-*** h - split horizontally
-*** v - split vertically 
-*** n - create new frame
-*** c - close window (not frame)
-*** o - other window
-*** u - previous window
-** z  - prefix for replacement
-*** s - replace selection
-*** c - char
-** 0..9 - numeric argument
+** DONE i  - move up one line
+** DONE j  - move left one char
+** DONE k  - move down one line
+** DONE l  - move left one line
+** DONE u  - move right one word
+** DONE o  - move left one word
+** DONE d  -  delete/kill (trem-d)
+** DONE f  - center
+** DONE .  - scroll up
+** DONE ,  - scroll down
+** TODO v  - _vacant_
+** TODO h  - _vacant_
+** DONE c  - copy
+** DONE y  - yank
+** DONE t  - undo
+** DONE r  - ryo repeat
+** TODO ?  - toggle help buffer
+*** TODO implement root help buffer and help buffer for each prefix key
+** DONE g  - keyboard quit
+** TODO e  - prefix for extended text manipulation (manipulation, not marking and selection)
+*** DONE i  - insert line above
+*** DONE j  - insert line below
+** TODO x  - prefix for execute
+*** DONE e  - emacs command
+*** DONE s  - shell 
+*** DONE p  - shell pipe
+** TODO n  - prefix for more complex navigation ("n" stands for "navigate")
+*** DONE i  - beggining of buffer
+*** DONE k  - end of buffer
+*** DONE j  - beggining of line
+*** DONE l  - end of line
+*** TODO s  - isearch next item
+*** TODO r  - isearch previous item
+*** TODO n  - line number
+*** TODO bm - bookmark 
+** TODO b  - prefix for buffer-related commands
+*** TODO k  - kill buffer
+*** TODO s  - save buffer
+*** TODO g  - goto buffer
+*** TODO l  - list buffers
+** TODO s  - prefix for search menu
+*** TODO s  - isearch forward
+*** TODO r  - isearch backward
+** TODO m  - prefix for marking, selection and multiple cursors
+*** TODO m - set mark
+*** TODO b  - select whole buffer
+*** TODO c  - prefix for cursors
+**** TODO l - edit lines
+**** TODO w - etit word like this
+**** TODO n - insert numbers
+*** TODO u  - mark until char
+*** TODO s  - mark symbol
+*** TODO w  - mark word
+*** TODO l  - mark line
+*** TODO ip - mark inside pairs
+*** TODO op - mark outside pairs
+*** TODO iq - mark inside quotes
+*** TODO oq - mark outside quotes
+** TODO w  - prefix for window and frame related operations
+*** TODO h - split horizontally
+*** TODO v - split vertically 
+*** TODO n - create new frame
+*** TODO c - close window (not frame)
+*** TODO o - other window
+*** TODO u - previous window
+** TODO z  - prefix for replacement
+*** TODO s - replace selection
+*** TODO c - replace char
+** TODO 0..9 - numeric argument
 
 * KEYS (draft)
 ** <menu> - enter or exit CMD mode
