@@ -374,7 +374,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
       (:mc-all t)
       ("p" forward-char)))
   (ryo-modal-keys
-   ;; Basic keybindings
+
    (:mc-all t)
 
    ;; movement keys
@@ -393,14 +393,18 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ;; killing/yanking, undoing, repeating
    ("d" trem-d :norepeat t)
    ("c" kill-ring-save :norepeat t)
-   ("y" yank :norepeat t)
+   ("v" yank :norepeat t)
    ("t" undo :norepeat t)
    ("r" ryo-repeat :norepeat t)
-   ("g" keyboard-quit :norepeat t)
+   ("e" "C-g" :norepeat t) ;; universal quit
 
-   ;; extended text manipulation (no marking or selection) <TODO>
-   ("e" (("i" trem-open-above)
-	 ("k" trem-open-below)))
+   ;; general text manipulation (no marking or selection) <TODO>
+   ("g" (("i" trem-open-above :norepeat t)
+	 ("k" trem-open-below :norepeat t)
+	 ("c" capitalize-dwim :norepeat t)
+	 ("u" upcase-dwim :norepeat t)
+	 ("l" downcase-dwim :norepeat t)
+	 ("h" hlt-highlight-region :norepeat t)))
 
    ;; execution
    ("x" (("e" execute-extended-command :norepeat)
@@ -411,7 +415,19 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("n" (("i" beginning-of-buffer :norepeat t)
 	 ("k" end-of-buffer :norepeat t)
 	 ("j" beginniing-of-line :norepeat t)
-	 ("l" end-of-line :norepeat t)))
+	 ("l" end-of-line :norepeat t)
+	 ("n" goto-line :norepeat t)))
+
+   ;; buffer/frame related commands
+   ("b" (("k" kill-buffer)
+	 ("s" save-buffer)
+	 (" s" save-some-buffers :norepeat t)
+	 ("l" list-buffers :norepeat t)
+	 ("g"  switch-to-buffer)))
+
+   ;; search
+   ("s" (("s" isearch-repeat-forward)
+	 ("b" isearch-repeat-backward)))
 
    ;; Numeric arguments
    ("0" "M-0" :norepeat t)

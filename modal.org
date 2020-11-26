@@ -33,40 +33,44 @@
 ** DONE f  - center
 ** DONE .  - scroll up
 ** DONE ,  - scroll down
-** TODO v  - _vacant_
+** TODO a  - _vacant_
+** TODO y  - _vacant_
 ** TODO h  - _vacant_
 ** DONE c  - copy
-** DONE y  - yank
+** DONE v  - yank
 ** DONE t  - undo
 ** DONE r  - ryo repeat
 ** TODO ?  - toggle help buffer
 *** TODO implement root help buffer and help buffer for each prefix key
-** DONE g  - keyboard quit
-** TODO e  - prefix for extended text manipulation (manipulation, not marking and selection)
+** DONE e  - keyboard quit (for exit)
+** DONE g  - prefix for general text manipulation (manipulation, not marking/selection) [CAN BE EXTENDED]
 *** DONE i  - insert line above
 *** DONE j  - insert line below
-** TODO x  - prefix for execute
+*** DONE c  - capitalize
+*** DONE u  - upcase
+*** DONE l  - lowercase
+*** DONE h  - highlight selection
+** DONE x  - prefix for execute [CAN BE EXTENDED]
 *** DONE e  - emacs command
 *** DONE s  - shell 
 *** DONE p  - shell pipe
-** TODO n  - prefix for more complex navigation ("n" stands for "navigate")
+** TODO [#C] n  - prefix for more complex navigation ("n" stands for "navigate")
 *** DONE i  - beggining of buffer
 *** DONE k  - end of buffer
 *** DONE j  - beggining of line
 *** DONE l  - end of line
-*** TODO s  - isearch next item
-*** TODO r  - isearch previous item
-*** TODO n  - line number
+*** DONE n  - line number
 *** TODO bm - bookmark 
-** TODO b  - prefix for buffer-related commands
-*** TODO k  - kill buffer
-*** TODO s  - save buffer
-*** TODO g  - goto buffer
-*** TODO l  - list buffers
-** TODO s  - prefix for search menu
-*** TODO s  - isearch forward
-*** TODO r  - isearch backward
-** TODO m  - prefix for marking, selection and multiple cursors
+** DONE b  - prefix for buffer-related commands
+*** DONE k    - kill buffer
+*** DONE " s" - save some buffers
+*** DONE s    - save buffer
+*** DONE g    - goto buffer
+*** DONE l    - list buffers
+** TODO [#C] s  - prefix for search menu
+*** DONE s  - isearch forward
+*** DONE r  - isearch backward
+** TODO m  - prefix for marking, selection and multiple cursors [CAN BE EXTENDED]
 *** TODO m - set mark
 *** TODO b  - select whole buffer
 *** TODO c  - prefix for cursors
