@@ -429,6 +429,12 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("s" (("s" isearch-repeat-forward)
 	 ("b" isearch-repeat-backward)))
 
+   ;; marking
+   ("m" (("m" set-mark-command :norepeat t)
+	 ("b" mark-whole-buffer :norepeat t)
+	 ("u" trem-select-to-char :first '(trem-set-mark-here))
+	 ))
+
    ;; Numeric arguments
    ("0" "M-0" :norepeat t)
    ("1" "M-1" :norepeat t)
