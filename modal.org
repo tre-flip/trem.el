@@ -34,7 +34,6 @@
 ** DONE .  - scroll up
 ** DONE ,  - scroll down
 ** TODO a  - _vacant_
-** TODO y  - _vacant_
 ** TODO h  - _vacant_
 ** DONE c  - copy
 ** DONE v  - yank
@@ -71,13 +70,9 @@
 *** DONE s  - isearch forward
 *** DONE r  - isearch backward
 ** TODO m  - prefix for marking, selection and multiple cursors [CAN BE EXTENDED]
-*** TODO m - set mark
-*** TODO b  - select whole buffer
-*** TODO c  - prefix for cursors
-**** TODO l - edit lines
-**** TODO w - etit word like this
-**** TODO n - insert numbers
-*** TODO u  - mark until char
+*** DONE m - set mark
+*** DONE b  - select whole buffer
+*** DONE u  - mark until char
 *** TODO s  - mark symbol
 *** TODO w  - mark word
 *** TODO l  - mark line
@@ -85,6 +80,10 @@
 *** TODO op - mark outside pairs
 *** TODO iq - mark inside quotes
 *** TODO oq - mark outside quotes
+** TODO y - prefix for cursors
+*** TODO l - edit lines
+*** TODO w - etit word like this
+*** TODO n - insert numbers
 ** TODO w  - prefix for window and frame related operations
 *** TODO h - split horizontally
 *** TODO v - split vertically 
