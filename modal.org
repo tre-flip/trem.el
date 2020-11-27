@@ -9,6 +9,7 @@
 *** standard regexp operations 
 *** expand region (er)
 ** hydras to make C-... C-... commands accessible from my CMD mode
+** ace-jump for word navigation, bind it in n-menu.
 ** whichkey for help buffer
 ** kakoune.el 
    It's a great example of text edititng primitives. Study it and use it's code if it fits.
@@ -42,7 +43,7 @@
 ** TODO ?  - toggle help buffer
 *** TODO implement root help buffer and help buffer for each prefix key
 ** DONE g  - keyboard quit (for exit)
-** DONE e  - prefix for extended text manipulation (manipulation, not marking/selection) [CAN BE EXTENDED]
+** TODO e  - prefix for extended text manipulation (manipulation, not marking/selection) [CAN BE EXTENDED]
 *** DONE i  - insert line above
 *** DONE j  - insert line below
 *** DONE c  - capitalize
@@ -50,6 +51,8 @@
 *** DONE l  - lowercase
 *** DONE h  - highlight selection
 ** DONE x  - prefix for execute [CAN BE EXTENDED]
+*** TODO me - macro execute
+*** TODO mr - macro record
 *** DONE e  - emacs command
 *** DONE s  - shell 
 *** DONE p  - shell pipe
@@ -60,13 +63,14 @@
 *** DONE l  - end of line
 *** DONE n  - line number
 *** TODO bm - bookmark 
+*** TODO ... - ace-jump commands
 ** DONE b  - prefix for buffer-related commands
 *** DONE k    - kill buffer
 *** DONE " s" - save some buffers
 *** DONE s    - save buffer
 *** DONE b    - goto buffer
 *** DONE l    - list buffers
-** TODO [#C] s  - prefix for search menu
+** TODO [#C] s  - prefix for search menu [BORKED]
 *** DONE s  - isearch forward
 *** DONE r  - isearch backward
 ** TODO m  - prefix for marking, selection and multiple cursors [CAN BE EXTENDED]
@@ -85,12 +89,14 @@
 *** TODO w - etit word like this
 *** TODO n - insert numbers
 ** TODO w  - prefix for window and frame related operations
-*** TODO h - split horizontally
-*** TODO v - split vertically 
-*** TODO n - create new frame
-*** TODO c - close window (not frame)
-*** TODO o - other window
-*** TODO u - previous window
+*** DONE h - split horizontally
+*** DONE v - split vertically 
+*** DONE n - create new frame
+*** DONE d - delete window (not frame)
+*** DONE o - other window
+*** DONE u - previous window
+*** DONE s - shrink window
+*** DONE e - enlarge window
 ** TODO z  - prefix for replacement
 *** TODO s - replace selection
 *** TODO c - replace char

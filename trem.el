@@ -366,10 +366,10 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 (defun trem-setup-keybinds ()
   "Set up default trem keybindings for normal mode."
   (global-subword-mode 1)
-  
+  (unbind-key (kbd "M-v"))
   (ryo-modal-keys
 
-   :mc-all t
+   (:mc-all t)
 
    ;; movement keys
    ("i" previous-line :norepeat t)
@@ -388,13 +388,14 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("d" trem-d :norepeat t)
    ("c" kill-ring-save :norepeat t)
    ("v" yank :norepeat t)
+   ("M-v" yank-pop)
    ("t" undo :norepeat t)
    ("r" ryo-modal-repeat :norepeat t)
    ("g" "C-g" :norepeat t) ;; universal quit
 
    ;; general text manipulation (no marking or selection) <TODO>
-   ("e" (("i" trem-open-above :norepeat t)
-	 ("k" trem-open-below :norepeat t)
+   ("e" (("k" trem-open-above :norepeat t)
+	 ("i" trem-open-below :norepeat t)
 	 ("c" capitalize-dwim :norepeat t)
 	 ("u" upcase-dwim :norepeat t)
 	 ("l" downcase-dwim :norepeat t)
@@ -410,25 +411,26 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("k" end-of-buffer :norepeat t)
 	 ("j" beginning-of-line :norepeat t)
 	 ("l" end-of-line :norepeat t)
-	 ("n" goto-line :norepeat t)))
-
-   ;; buffer/frame related commands
-   ("b" (("k" kill-buffer)
-	 ("s" save-buffer)
-	 (" s" save-some-buffers :norepeat t)
-	 ("l" list-buffers :norepeat t)
-	 ("b"  switch-to-buffer)))
-
-   ;; search
-   ("s" (("s" isearch-repeat-forward)
-	 ("b" isearch-repeat-backward)))
+	 ("n" goto-line :norepeat t)
+	 ))
 
    ;; marking
    ("m" (("m" set-mark-command :norepeat t)
 	 ("b" mark-whole-buffer :norepeat t)
-	 ("u" trem-select-to-char :first '(trem-set-mark-here))
-	 ("")))
-
+	 ("u" trem-select-to-char :first '(trem-set-mark-here)) ;; BORKED
+	 ("i" er/mark-inside-pairs)
+	 ("o" er/mark-outside-pairs)
+	 ("k" er/mark-inside-quotes)
+	 ("u" er/mark-outside-quotes)
+	 ("p" er/mark-paragraph)
+	 ("s" er/mark-symbol)
+	 ("ts" er/mark-text-sentence)
+	 ("e" er/expand-region)
+	 ("c" er/contract-region)
+	 ("w" er/mark-word)
+	 ;; TODO
+	 ))
+   
    ;; Numeric arguments
    ("0" "M-0" :norepeat t)
    ("1" "M-1" :norepeat t)
@@ -444,6 +446,28 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
   ;; put these here because they shouldn't be repeated for all cursors
   (ryo-modal-keys
+
+   ;; search BORKED
+   ("s" (("s" isearch-repeat-forward)
+	 ("b" isearch-repeat-backward)))
+
+   ;; buffer/frame related commands
+   ("b" (("k" kill-buffer)
+	 ("s" save-buffer)
+	 ("e" eval-buffer)
+	 ("as" save-some-buffers :norepeat t)
+	 ("l" list-buffers :norepeat t)
+	 ("b"  switch-to-buffer)))
+
+   ;; window management commands
+   ("w" (("h" split-window-below)
+	 ("v" split-window-right)
+	 ("d" delete-window)
+	 ("e" enlarge-window)
+	 ("s" shrink-window)
+	 ("n" make-frame-command)
+	 ("u" prev-window)
+	 ("o" other-window)))
 
    ;; buffer commands
    ("[ b" previous-buffer)
