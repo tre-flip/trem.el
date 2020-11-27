@@ -13,7 +13,7 @@
 (require 'cl-lib)
 (require 'ryo-modal)
 (require 'expand-region)
-(reuiqre 'multiple-cursors)
+(require 'multiple-cursors)
 
 ;; <<< BEGIN SHELL >>>
 (defun trem-shell-pipe ()
@@ -367,18 +367,12 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
   "Set up default trem keybindings for normal mode."
   (global-subword-mode 1)
   
-  ;; setting special bindings for lisp mode
-  (eval-after-load "text-mode"
-    '(ryo-modal-major-mode-keys
-      'lisp-mode
-      (:mc-all t)
-      ("p" forward-char)))
   (ryo-modal-keys
 
-   (:mc-all t)
+   :mc-all t
 
    ;; movement keys
-   ("i" prefious-line :norepeat t)
+   ("i" previous-line :norepeat t)
    ("j" backward-char :norepeat t)
    ("k" next-line     :norepeat t)
    ("l" forward-char  :norepeat t)
@@ -395,11 +389,11 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("c" kill-ring-save :norepeat t)
    ("v" yank :norepeat t)
    ("t" undo :norepeat t)
-   ("r" ryo-repeat :norepeat t)
-   ("e" "C-g" :norepeat t) ;; universal quit
+   ("r" ryo-modal-repeat :norepeat t)
+   ("g" "C-g" :norepeat t) ;; universal quit
 
    ;; general text manipulation (no marking or selection) <TODO>
-   ("g" (("i" trem-open-above :norepeat t)
+   ("e" (("i" trem-open-above :norepeat t)
 	 ("k" trem-open-below :norepeat t)
 	 ("c" capitalize-dwim :norepeat t)
 	 ("u" upcase-dwim :norepeat t)
@@ -414,7 +408,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ;; navigation
    ("n" (("i" beginning-of-buffer :norepeat t)
 	 ("k" end-of-buffer :norepeat t)
-	 ("j" beginniing-of-line :norepeat t)
+	 ("j" beginning-of-line :norepeat t)
 	 ("l" end-of-line :norepeat t)
 	 ("n" goto-line :norepeat t)))
 
@@ -423,7 +417,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("s" save-buffer)
 	 (" s" save-some-buffers :norepeat t)
 	 ("l" list-buffers :norepeat t)
-	 ("g"  switch-to-buffer)))
+	 ("b"  switch-to-buffer)))
 
    ;; search
    ("s" (("s" isearch-repeat-forward)

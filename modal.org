@@ -41,8 +41,8 @@
 ** DONE r  - ryo repeat
 ** TODO ?  - toggle help buffer
 *** TODO implement root help buffer and help buffer for each prefix key
-** DONE e  - keyboard quit (for exit)
-** DONE g  - prefix for general text manipulation (manipulation, not marking/selection) [CAN BE EXTENDED]
+** DONE g  - keyboard quit (for exit)
+** DONE e  - prefix for extended text manipulation (manipulation, not marking/selection) [CAN BE EXTENDED]
 *** DONE i  - insert line above
 *** DONE j  - insert line below
 *** DONE c  - capitalize
@@ -64,7 +64,7 @@
 *** DONE k    - kill buffer
 *** DONE " s" - save some buffers
 *** DONE s    - save buffer
-*** DONE g    - goto buffer
+*** DONE b    - goto buffer
 *** DONE l    - list buffers
 ** TODO [#C] s  - prefix for search menu
 *** DONE s  - isearch forward
@@ -95,6 +95,8 @@
 *** TODO s - replace selection
 *** TODO c - replace char
 ** TODO 0..9 - numeric argument
+** TODO ADD g AS - QUIT TO EVERY PREFIX
+** TODO ADD :name 
 
 * KEYS (draft)
 ** <menu> - enter or exit CMD mode
