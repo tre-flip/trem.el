@@ -357,6 +357,10 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
           (goto-char end))
         (mc/maybe-multiple-cursors-mode)))))
 
+(defun trem-prev-window ()
+   (interactive)
+   (other-window -1))
+
 ;; <<< END UTILITIES >>>
 
 
@@ -424,7 +428,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
  	 ("o" (("i" er/mark-outside-pairs)
 	       ("k" er/mark-outside-quotes))
 	  :name "outside")
- 	 ("p" er/mark-paragraph)
+ 	 ;;("p" er/mark-paragraph)
 	 ("s" er/mark-symbol)
 	 ("ts" er/mark-text-sentence)
 	 ("e" er/expand-region)
@@ -470,15 +474,11 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("e" enlarge-window)
 	 ("s" shrink-window)
 	 ("n" make-frame-command)
-	 ("u" prev-window)
-	 ("o" other-window)))
+	 ("u" trem-prev-window)
+	 ("o" other-window)))))
 
-   ;; buffer commands
-   ("[ b" previous-buffer)
-   ("] b" next-buffer)))
-
+   
 ;; <<< END BINDINGS >>>
 
 (provide 'trem)
 ;;; trem.el ends here
-

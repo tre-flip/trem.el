@@ -50,8 +50,11 @@
 *** DONE u  - upcase
 *** DONE l  - lowercase
 *** DONE h  - highlight selection
-*** TODO e  - prefix for exchanges
+*** TODO e - exchange
 *** TODO r  - prefix for replacements
+**** TODO r  - replace regexp
+**** TODO s  - replacs selection with killed text
+**** TODO c  - replace selection with char 
 ** DONE x  - prefix for execute [CAN BE EXTENDED]
 *** TODO me - macro execute
 *** TODO mr - macro record
@@ -74,8 +77,8 @@
 *** DONE l    - list buffers
 *** DONE o    - open file
 ** TODO s  - prefix for search menu [BORKED]
-*** DONE s  - isearch forward
-*** DONE r  - isearch backward
+*** TODO s  - isearch forward
+*** TODO r  - isearch backward
 ** TODO m  - prefix for marking, selection and multiple cursors [CAN BE EXTENDED]
 *** DONE m - set mark
 *** DONE b  - select whole buffer
