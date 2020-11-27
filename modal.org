@@ -50,13 +50,15 @@
 *** DONE u  - upcase
 *** DONE l  - lowercase
 *** DONE h  - highlight selection
+*** TODO e  - prefix for exchanges
+*** TODO r  - prefix for replacements
 ** DONE x  - prefix for execute [CAN BE EXTENDED]
 *** TODO me - macro execute
 *** TODO mr - macro record
 *** DONE e  - emacs command
 *** DONE s  - shell 
 *** DONE p  - shell pipe
-** TODO [#C] n  - prefix for more complex navigation ("n" stands for "navigate")
+** TODO n  - prefix for more complex navigation ("n" stands for "navigate")
 *** DONE i  - beggining of buffer
 *** DONE k  - end of buffer
 *** DONE j  - beggining of line
@@ -66,29 +68,30 @@
 *** TODO ... - ace-jump commands
 ** DONE b  - prefix for buffer-related commands
 *** DONE k    - kill buffer
-*** DONE " s" - save some buffers
+*** DONE "as" - save some buffers
 *** DONE s    - save buffer
 *** DONE b    - goto buffer
 *** DONE l    - list buffers
-** TODO [#C] s  - prefix for search menu [BORKED]
+*** DONE o    - open file
+** TODO s  - prefix for search menu [BORKED]
 *** DONE s  - isearch forward
 *** DONE r  - isearch backward
 ** TODO m  - prefix for marking, selection and multiple cursors [CAN BE EXTENDED]
 *** DONE m - set mark
 *** DONE b  - select whole buffer
 *** DONE u  - mark until char
-*** TODO s  - mark symbol
-*** TODO w  - mark word
+*** DONE s  - mark symbol
+*** DONE w  - mark word
 *** TODO l  - mark line
-*** TODO ip - mark inside pairs
-*** TODO op - mark outside pairs
-*** TODO iq - mark inside quotes
-*** TODO oq - mark outside quotes
-** TODO y - prefix for cursors
+*** DONE ii - mark inside pairs
+*** DONE oi - mark outside pairs
+*** DONE ik - mark inside quotes
+*** DONE ok - mark outside quotes
+** TODO y - prefix for cursors [CONSIDER PUTTING IT IN m MENU]
 *** TODO l - edit lines
 *** TODO w - etit word like this
 *** TODO n - insert numbers
-** TODO w  - prefix for window and frame related operations
+** DONE w  - prefix for window and frame related operations
 *** DONE h - split horizontally
 *** DONE v - split vertically 
 *** DONE n - create new frame
@@ -97,10 +100,11 @@
 *** DONE u - previous window
 *** DONE s - shrink window
 *** DONE e - enlarge window
-** TODO z  - prefix for replacement
-*** TODO s - replace selection
-*** TODO c - replace char
 ** TODO 0..9 - numeric argument
+
+* GENERAL FIXES
+** TODO configure cursors
+** TODO fix keyboard-quit for mc
 ** TODO ADD g AS - QUIT TO EVERY PREFIX
 ** TODO ADD :name 
 

@@ -418,17 +418,19 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("m" (("m" set-mark-command :norepeat t)
 	 ("b" mark-whole-buffer :norepeat t)
 	 ("u" trem-select-to-char :first '(trem-set-mark-here)) ;; BORKED
-	 ("i" er/mark-inside-pairs)
-	 ("o" er/mark-outside-pairs)
-	 ("k" er/mark-inside-quotes)
-	 ("u" er/mark-outside-quotes)
-	 ("p" er/mark-paragraph)
+	 ("i" (("i" er/mark-inside-pairs)
+	       ("k" er/mark-outside-quotes))
+	  :name "inside") 
+ 	 ("o" (("i" er/mark-outside-pairs)
+	       ("k" er/mark-outside-quotes))
+	  :name "outside")
+ 	 ("p" er/mark-paragraph)
 	 ("s" er/mark-symbol)
 	 ("ts" er/mark-text-sentence)
 	 ("e" er/expand-region)
 	 ("c" er/contract-region)
 	 ("w" er/mark-word)
-	 ;; TODO
+	 ;; TODO: MARK SEVERAL TEXT OBJECTS OF THE SAME CLASS, MARK LINE
 	 ))
    
    ;; Numeric arguments
@@ -455,9 +457,11 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("b" (("k" kill-buffer)
 	 ("s" save-buffer)
 	 ("e" eval-buffer)
-	 ("as" save-some-buffers :norepeat t)
+	 ("a" (("s" save-some-buffers :norepeat t))
+	  :name "all-buffers")
 	 ("l" list-buffers :norepeat t)
-	 ("b"  switch-to-buffer)))
+	 ("o" find-file)
+	 ("b" switch-to-buffer)))
 
    ;; window management commands
    ("w" (("h" split-window-below)
