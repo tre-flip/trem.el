@@ -3,7 +3,7 @@
 ;; Author: treflip <do-you-really-need-it@nowhere.net>
 ;; Version: 0.1
 ;; URL: https://github.com/tre-flip/trem.el
-;; Package-Requires: ((ryo-modal "0.4") (multiple-cursors "1.4") (expand-region "0.11.0") (emacs "25.1"))
+;; Package-Requires: ((trem-modal "0.4") (multiple-cursors "1.4") (expand-region "0.11.0") (emacs "25.1"))
 ;; MIT License
 
 ;;; Commentary:
@@ -11,9 +11,421 @@
 
 ;;; Code:
 (require 'cl-lib)
-(require 'ryo-modal)
+(require 'org-macs)
+(require 'seq)
+(require 'subr-x)
 (require 'expand-region)
 (require 'multiple-cursors)
+
+;; <<< BEGIN MODAL >>>
+
+(defvar trem-modal-mode-map (make-sparse-keymap)
+  "General bindings in trem-modal-mode.
+Major mode specific bindings will be bound to trem-<major-mode>-map instead.")
+
+(defvar trem-modal-cursor-type t
+  "Cursor type used in `trem-modal-mode'.  See description of `cursor-type'.")
+
+(defvar trem-modal-bindings-list ()
+  "A list of all the bindings in `trem-modal-mode'.
+It is more convenient to view this using `trem-modal-bindings'.")
+
+(defvar trem-modal--last-command nil)
+
+(defun trem-modal-repeat ()
+  "Repeat last executed command in `trem-modal-map' (or major mode variant).
+
+If you do not want a command to be remembered by `trem-modal-repeat',
+add :norepeat t as a keyword."
+  (interactive)
+  (when trem-modal--last-command
+    (command-execute trem-modal--last-command nil nil t)))
+
+(defvar trem-modal--non-repeating-commands '(trem-modal-repeat))
+
+(defvar trem-modal-mode-keymaps nil
+  "Holds a list of all trem major mode specific keymaps.")
+
+;; For compability with multiple-cursors
+(defvar mc/cmds-to-run-for-all nil)
+(defvar mc/cmds-to-run-once nil)
+
+(defun trem-modal-derived-keymaps ()
+  "Get trem mode keymaps relevant to the current `major-mode' and/or minor-modes."
+  (mapcar (lambda (mode)
+            (eval (intern-soft (concat "trem-" (symbol-name mode) "-map"))))
+          (seq-filter (lambda (elt) (or (derived-mode-p elt)
+                                        (and (boundp elt) (symbol-value elt))))
+                      trem-modal-mode-keymaps)))
+
+(defun trem-modal-maybe-store-last-command ()
+  "Update `trem-modal--last-command', if `this-command' is repeatable."
+  (when trem-modal-mode
+    (let ((cmd (lookup-key (apply 'append trem-modal-mode-map
+                                  (trem-modal-derived-keymaps))
+                           (this-command-keys))))
+      (if (and (commandp cmd)
+               (not (member cmd trem-modal--non-repeating-commands)))
+          (setq trem-modal--last-command cmd)))))
+
+;;;###autoload
+(defun trem-modal-key (key target &rest args)
+  "Bind KEY to TARGET in `trem-modal-mode'.
+
+TARGET can be one of:
+
+kbd-string   Pressing KEY will simulate TARGET as a keypress.
+command      Calls TARGET interactively.
+list         Each element of TARGET is sent to `trem-modal-key' again, with
+             KEY as a prefix key.  ARGS are copied, except for :name.
+             :name will be used by `which-key' (if installed) to name
+             the prefix key, if `which-key-enable-extended-define-key'
+             is t.
+:hydra       If you have hydra installed, a new hydra will be created and
+             bound to KEY.  The first element of ARGS should be a list
+             containing the arguments sent to `defhydra'.
+
+ARGS should be of the form [:keyword option]... if TARGET is a kbd-string
+or a command.  The following keywords exist:
+
+:name      A string, naming the binding.  If ommited get name from TARGET.
+:exit      If t then exit `trem-modal-mode' after the command.
+:read      If t then prompt for a string to insert after the command.
+:mode      If set to a major or minor mode symbol (e.g. 'org-mode) the key will
+           only be bound in that mode.
+:norepeat  If t then do not become a target of `trem-modal-repeat'.
+:then      Can be a quoted list of additional commands that will be run after
+           the TARGET.  These will not be shown in the name of the binding.
+           (use :name to give it a nickname).
+:first     Similar to :then, but is run before the TARGET.
+:mc-all    If t the binding's command will be added to `mc/cmds-to-run-for-all'.
+           If 0 the binding's command will be added to `mc/cmds-to-run-once'.
+
+If any ARGS other han :mode, :norepeat or :mc-all are given, a
+new command named trem:<hash>:<name> will be created. This is to
+make sure the name of the created command is unique."
+  (cond
+   ((listp target)
+    (when (and (require 'which-key nil t)
+               which-key-enable-extended-define-key
+               (plist-get args :name))
+      (let ((mode (plist-get args :mode)))
+        (if mode
+            (let ((map-name (format "trem-%s-map" mode)))
+              (unless (intern-soft map-name)
+                (set (intern map-name) (make-sparse-keymap))
+                (set-keymap-parent (eval (intern map-name))
+                                   trem-modal-mode-map)
+                (add-to-list 'trem-modal-mode-keymaps mode))
+              (define-key (eval (intern map-name)) (kbd key) `(,(plist-get args :name))))
+          (define-key trem-modal-mode-map (kbd key) `(,(plist-get args :name))))))
+    (mapc (lambda (x)
+            ;; Merge :then lists
+            (when (and (plist-get (cddr x) :then)
+                       (plist-get args :then))
+              (setf (cddr x) (plist-put (cddr x) :then (append (plist-get (cddr x) :then)
+                                                               (plist-get args :then)))))
+            ;; Merge :first lists
+            (when (and (plist-get (cddr x) :first)
+                       (plist-get args :first))
+              (setf (cddr x) (plist-put (cddr x) :first (append (plist-get (cddr x) :first)
+                                                                (plist-get args :first)))))
+            (apply #'trem-modal-key `(,(concat key " " (car x))
+                                     ,@(cdr x)
+                                     ,@(org-plist-delete args :name))))
+          target))
+   ((and (require 'hydra nil t)
+         (equal target :hydra))
+    (apply #'trem-modal-key `(,key ,(eval `(defhydra ,@(car args))) ,@(cdr args))))
+   ((and (symbolp target) (not (functionp target)))
+    (error "`%s' isn't a function" (symbol-name target)))
+   (t
+    (let* ((name (or (plist-get args :name)
+                     (if (stringp target)
+                         target
+                       (symbol-name target))))
+           (hash (secure-hash 'md5 (format "%s%s" target args)))
+           (docs
+            (if (stringp target)
+                (if (keymapp (key-binding (kbd target)))
+                    (concat "Call keymap " target)
+                  (format "%s → %s (`%s')\n\n%s%s"
+                          (key-description (kbd key))
+                          (key-description (kbd target))
+                          (key-binding (kbd target))
+                          (documentation (key-binding (kbd target)))
+                          (mapconcat #'documentation (plist-get args :then) "\n")))
+              (concat (documentation target)
+                      (mapconcat #'documentation (plist-get args :then) "\n"))))
+           (func
+            (cond
+             ((thread-first (org-plist-delete args :mode)
+                (org-plist-delete :norepeat)
+                (org-plist-delete :mc-all))
+              (eval
+               `(defun ,(intern (concat "trem:" hash ":" name)) ()
+                  ,docs
+                  (interactive)
+                  (dolist (f (quote ,(plist-get args :first)))
+                    (if (commandp f)
+                        (let ((real-this-command f))
+                          (call-interactively f))
+                      (apply f nil)))
+                  (if (and (stringp ',target)
+                           (keymapp (key-binding (kbd ,target))))
+                      (progn
+                        (when ,(plist-get args :exit) (trem-modal-mode -1))
+                        (setq unread-command-events (listify-key-sequence (kbd ',target))))
+                    (let ((real-this-command
+                           (if (stringp ',target)
+                               (key-binding (kbd ,target))
+                             ',target)))
+                      (call-interactively real-this-command))
+                    (dolist (f (quote ,(plist-get args :then)))
+                      (if (commandp f)
+                          (let ((real-this-command f))
+                            (call-interactively f))
+                        (apply f nil)))
+                    (when ,(plist-get args :exit) (trem-modal-mode -1))
+                    (when ,(plist-get args :read) (insert (read-string "Insert: ")))))))
+             ((stringp target)
+              (if (keymapp (key-binding (kbd target)))
+                  ;; TODO: This doesn't seem to work with "keymaps inside of keymaps"
+                  (lambda () (interactive)
+                    (setq unread-command-events (listify-key-sequence (kbd target))))
+                (key-binding (kbd target))))
+             (t
+              target)))
+           (mode (plist-get args :mode)))
+      (when (plist-get args :norepeat)
+        (add-to-list 'trem-modal--non-repeating-commands func))
+      (let ((mc-all (plist-get args :mc-all)))
+        (when mc-all
+          (if (and (equal mc-all 0) (not (memq func mc/cmds-to-run-for-all)))
+              (add-to-list 'mc/cmds-to-run-once func)
+            (and (not (memq func mc/cmds-to-run-once))
+                 (add-to-list 'mc/cmds-to-run-for-all func)))))
+      (if mode
+          (let ((map-name (format "trem-%s-map" mode)))
+            (unless (intern-soft map-name)
+              (set (intern map-name) (make-sparse-keymap))
+              (set-keymap-parent (eval (intern map-name))
+                                 trem-modal-mode-map)
+              (add-to-list 'trem-modal-mode-keymaps mode))
+            (define-key (eval (intern map-name)) (kbd key) func))
+        (define-key trem-modal-mode-map (kbd key) func))
+      (add-to-list 'trem-modal-bindings-list `(,key ,name ,@args))))))
+
+;;;###autoload
+(defmacro trem-modal-keys (&rest args)
+  "Bind several keys in `trem-modal-mode'.
+Typically each element in ARGS should be of the form (key target [keywords]).
+The target should not be quoted.
+The first argument may be a list of keywords; they're applied to all keys:
+
+  \(:exit t :then '(kill-region)).
+
+See `trem-modal-key' for more information."
+  (let ((kw-list
+         (if (symbolp (caar args))
+             (pop args)
+           nil)))
+    `(progn
+       ,@(mapcar (lambda (x)
+                   `(trem-modal-key ,(car x)
+                                   ,(if (stringp (cadr x))
+                                        (cadr x)
+                                      `(quote ,(cadr x)))
+                                   ,@(nthcdr 2 x)
+                                   ,@kw-list))
+                 args))))
+
+;;;###autoload
+(defmacro trem-modal-major-mode-keys (mode &rest args)
+  "Bind several keys in `trem-modal-mode', but only if major mode is MODE.
+ARGS is the same as `trem-modal-keys'."
+  `(progn
+     ,@(mapcar (lambda (x)
+                 `(trem-modal-key ,(car x)
+                                 (if ,(stringp (cadr x))
+                                     ,(cadr x)
+                                   (quote ,(cadr x)))
+                                 ,@(nthcdr 2 x)
+                                 :mode ,mode))
+               args)))
+
+;;;###autoload
+(defun trem-modal-command-then-trem (binding &optional command keymap)
+  "Define key BINDING to COMMAND in KEYMAP. Then activate `trem-modal-mode'.
+If COMMAND is excluded, use what is bound to right now in KEYMAP.
+If KEYMAP is excluded, use `current-global-map'."
+  (let* ((keymap (or keymap (current-global-map)))
+         (command (or command
+                      (lookup-key keymap (kbd binding))
+                      (user-error "No binding for '%s'" binding)))
+         (name (symbol-name command))
+         (hash (secure-hash 'md5 (format "%s-then-trem" command)))
+         (docs (concat (documentation command)
+                       "\n\nThen enter `trem-modal-mode'."))
+         (func
+          (eval
+           `(defun ,(intern (concat "trem:" hash ":" name)) ()
+              ,docs
+              (interactive)
+              (call-interactively ',command)
+              (trem-modal-mode 1)))))
+    (define-key keymap (kbd binding) func)))
+
+;;;###autoload
+(defun trem-modal-set-key (key command)
+  "Give KEY a binding as COMMAND in `trem-modal-mode-map'.
+
+This function is meant to be used interactively, if you want to
+temporarily bind a key in trem.
+
+See `global-set-key' for more info."
+  (interactive "KSet trem key: \nCSet trem key %s to command: ")
+  (or (vectorp key) (stringp key)
+      (signal 'wrong-type-argument (list 'arrayp key)))
+  (define-key trem-modal-mode-map key command))
+
+;;;###autoload
+(defun trem-modal-unset-key (key)
+  "Remove `trem-modal-mode-map' binding of KEY.
+KEY is a string or vector representing a sequence of keystrokes.
+
+This function is meant to unbind keys set with `trem-modal-set-key'."
+  (interactive "kUnset trem key: ")
+  (define-key trem-modal-mode-map key nil))
+
+;;;###autoload
+(defun trem-modal-bindings ()
+  "Display a buffer of all bindings in `trem-modal-mode'."
+  (interactive)
+  (let ((key-column-width 18)
+        (command-column-width 40))
+    (cl-flet ((trem-princ-bindings
+               (bindings)
+               (mapc (lambda (x)
+                       (let ((keywords (nthcdr 2 x)))
+                         (princ (concat (car x)
+                                        (make-string (- key-column-width (length (car x))) ? )
+                                        (cadr x)
+                                        (if (plist-get keywords :exit) " → EXIT")
+                                        (if (plist-get keywords :read) " → READ")
+                                        "\n"))
+                         (when (and (not (plist-get keywords :name))
+                                    (plist-get keywords :then))
+                           (princ (concat (make-string key-column-width ? )
+                                          (mapconcat (lambda (x)
+                                                       (concat " → " (symbol-name x)))
+                                                     (plist-get keywords :then)
+                                                     (concat "\n" (make-string key-column-width ? )))
+                                          "\n")))))
+                     bindings)))
+      (with-output-to-temp-buffer "*trem-modal-bindings*"
+        (princ (format "Key%s Bound to\n%s %s\n"
+                       (make-string (- key-column-width 4) ? )
+                       (make-string (1- key-column-width) ?-)
+                       (make-string (1- command-column-width) ?-)))
+        (setq trem-modal-bindings-list
+              (sort trem-modal-bindings-list
+                    (lambda (l r)
+                      (string< (car l) (car r)))))
+        (trem-princ-bindings (cl-remove-if (lambda (x)
+                                            (plist-get (nthcdr 2 x) :mode))
+                                          trem-modal-bindings-list))
+        (let ((modes))
+          (mapc (lambda (x)
+                  (add-to-list 'modes (plist-get (nthcdr 2 x) :mode)))
+                trem-modal-bindings-list)
+          (mapc (lambda (x)
+                  (when x
+                    (princ (format "\n\n%s specific bindings\n%s\n"
+                                   (symbol-name x)
+                                   (make-string (+ key-column-width command-column-width) ?-)))
+                    (trem-princ-bindings (cl-remove-if-not (lambda (binding)
+                                                            (equal x (plist-get (nthcdr 2 binding) :mode)))
+                                                          trem-modal-bindings-list))))
+                modes))))))
+
+;;;###autoload
+(define-minor-mode trem-modal-mode
+  "Toggle `trem-modal-mode'."
+  nil " trem" trem-modal-mode-map
+  (if trem-modal-mode
+      (progn
+        (add-hook 'post-command-hook #'trem-modal-maybe-store-last-command)
+        (setq-local cursor-type trem-modal-cursor-type)
+        (dolist (map (trem-modal-derived-keymaps))
+          (make-local-variable 'minor-mode-overriding-map-alist)
+          (push `(trem-modal-mode . ,map) minor-mode-overriding-map-alist)))
+    (remove-hook 'post-command-hook #'trem-modal-maybe-store-last-command)
+    (setq minor-mode-overriding-map-alist
+          (assq-delete-all 'trem-modal-mode minor-mode-overriding-map-alist))
+    (setq-local cursor-type (default-value 'cursor-type))))
+
+;; use-package integration
+(defun trem-modal--extract-commands-from (args)
+  "Extract commands from ARGS to enable lazy loading for :trem."
+  (let (commands)
+    (cl-remove-duplicates
+     (dolist (arg args commands)
+       (let ((target (cadr arg)))
+         (cond
+          ((listp target)
+           (setq commands (append (trem-modal--extract-commands-from target) commands)))
+          ((equal target :hydra)
+           (dolist (hydra-term (cadr (cl-third arg)))
+             (when (and hydra-term
+                        (listp hydra-term)
+                        (cadr hydra-term))
+               (push (cadr hydra-term) commands))))
+          ((not (stringp target))
+           (push target commands))))))))
+
+(with-eval-after-load 'use-package-core
+  ;; step 1: introduce trem-modal keyword before :bind
+  (unless (member :trem use-package-keywords)
+    (setq use-package-keywords (use-package-list-insert :trem use-package-keywords :bind)))
+
+  ;; ensure deferred loading
+  (when (boundp 'use-package-deferring-keywords)
+    (add-to-list 'use-package-deferring-keywords :trem t))
+
+  ;; step 2: normalize
+  (defun use-package-normalize/:trem (_name _keyword args)
+    "Apply lists of keywords to all keys following that list."
+    (let (kwlist sanitized-args)
+      (dolist (arg args sanitized-args)
+        (cond
+         ((symbolp (car arg))
+          (setq kwlist arg))
+         ((stringp (car arg))
+          (push (append arg kwlist) sanitized-args))))))
+
+  ;; step 3: handler
+  (defun use-package-handler/:trem (name _keyword arglists rest state)
+    "Use-package handler for :trem."
+
+    (use-package-concat
+     (use-package-process-keywords name
+       (use-package-sort-keywords
+        (use-package-plist-append rest :commands
+                                  (trem-modal--extract-commands-from arglists)))
+       state)
+     `((ignore ,@(mapcar (lambda (arglist)
+                           (if (stringp (cadr arglist))
+                               `(trem-modal-key ,(car arglist)
+                                               ,(cadr arglist)
+                                               ,@(nthcdr 2 arglist)
+                                               :package ',name)
+                             `(trem-modal-key ,(car arglist)
+                                             (quote ,(cadr arglist))
+                                             ,@(nthcdr 2 arglist)
+                                             :package ',name)))
+                         arglists))))))
+
 
 ;; <<< BEGIN SHELL >>>
 (defun trem-shell-pipe ()
@@ -149,7 +561,7 @@ effectively reverse the (problematic) order of two `trem-exchange' calls."
 
 (defun trem-insert-mode () "Return to insert mode."
        (interactive)
-       (ryo-modal-mode 0))
+       (trem-modal-mode 0))
 
 (defun trem-set-mark-if-inactive () "Set the mark if it isn't active."
        (interactive)
@@ -371,7 +783,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
   "Set up default trem keybindings for normal mode."
   (global-subword-mode 1)
   (unbind-key (kbd "M-v"))
-  (ryo-modal-keys
+  (trem-modal-keys
 
    (:mc-all t)
 
@@ -394,7 +806,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("v" yank :norepeat t)
    ("M-v" yank-pop)
    ("t" undo :norepeat t)
-   ("r" ryo-modal-repeat :norepeat t)
+   ("r" trem-modal-repeat :norepeat t)
    ("g" "C-g" :norepeat t) ;; universal quit
 
    ;; general text manipulation (no marking or selection) <TODO>
@@ -451,7 +863,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("-" "M--" :norepeat t))
 
   ;; put these here because they shouldn't be repeated for all cursors
-  (ryo-modal-keys
+  (trem-modal-keys
 
    ;; search BORKED
    ("s" (("s" isearch-repeat-forward)
