@@ -802,6 +802,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
    ;; killing/yanking, undoing, repeating
    ("d" trem-d :norepeat t)
+   ("C" trem-d :exit t :name "change")
    ("c" kill-ring-save :norepeat t)
    ("v" yank :norepeat t)
    ("M-v" yank-pop)
@@ -813,14 +814,24 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("e" (("k" trem-open-above :norepeat t)
 	 ("i" trem-open-below :norepeat t)
 	 ("c" capitalize-dwim :norepeat t)
+	 ("o" open-line)
+	 ("j" electric-newline-and-maybe-indent :exit t)
 	 ("u" upcase-dwim :norepeat t)
 	 ("l" downcase-dwim :norepeat t)
-	 ("h" hlt-highlight-region :norepeat t)))
+	 ("h" hlt-highlight-region :norepeat t)
+	 ("r" (("r" replace-regexp)
+	       ("s" trem-replace-selection)
+	       ("c" trem-replace-char))
+	  :name "regex-operations")
+	 ;; wrap selection into something
+	 ("w" (("g" nil :name "quit")
+	       )
+	  :name "wrap")))
 
    ;; execution
-   ("x" (("e" execute-extended-command :norepeat)
-	 ("s" trem-shell-command :norepeat)
-	 ("p" trem-shell-pipe :norepeat)))
+   ("x" (("e" execute-extended-command :norepeat t)
+	 ("s" trem-shell-command :norepeat t)
+	 ("p" trem-shell-pipe :norepeat t)))
 
    ;; navigation
    ("n" (("i" beginning-of-buffer :norepeat t)
@@ -846,6 +857,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("e" er/expand-region)
 	 ("c" er/contract-region)
 	 ("w" er/mark-word)
+	 ("n" mc/mark-next)
 	 ;; TODO: MARK SEVERAL TEXT OBJECTS OF THE SAME CLASS, MARK LINE
 	 ))
    
@@ -864,7 +876,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
   ;; put these here because they shouldn't be repeated for all cursors
   (trem-modal-keys
-
+   (:mc-all 0)
    ;; search BORKED
    ("s" (("s" isearch-repeat-forward)
 	 ("b" isearch-repeat-backward)))
@@ -879,6 +891,9 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("o" find-file)
 	 ("b" switch-to-buffer)))
 
+   ;; exit modal mode
+   ("<menu>" trem-modal-mode :norepeat t)
+
    ;; window management commands
    ("w" (("h" split-window-below)
 	 ("v" split-window-right)
@@ -889,7 +904,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("u" trem-prev-window)
 	 ("o" other-window)))))
 
-   
+
 ;; <<< END BINDINGS >>>
 
 (provide 'trem)

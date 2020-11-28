@@ -45,16 +45,18 @@
 ** DONE g  - keyboard quit (for exit)
 ** TODO e  - prefix for extended text manipulation (manipulation, not marking/selection) [CAN BE EXTENDED]
 *** DONE i  - insert line above
-*** DONE j  - insert line below
+*** DONE k  - insert line below
 *** DONE c  - capitalize
+*** DONE j  - electric-newline, exit
+*** DONE o  - open-line, exit
 *** DONE u  - upcase
 *** DONE l  - lowercase
 *** DONE h  - highlight selection
 *** TODO e - exchange
-*** TODO r  - prefix for replacements
-**** TODO r  - replace regexp
-**** TODO s  - replacs selection with killed text
-**** TODO c  - replace selection with char 
+*** DONE r  - prefix for replacements
+**** DONE r  - replace regexp
+**** DONE s  - replacs selection with killed text
+**** DONE c  - replace selection with char 
 ** DONE x  - prefix for execute [CAN BE EXTENDED]
 *** TODO me - macro execute
 *** TODO mr - macro record
@@ -80,6 +82,7 @@
 *** TODO s  - isearch forward
 *** TODO r  - isearch backward
 ** TODO m  - prefix for marking, selection and multiple cursors [CAN BE EXTENDED]
+*** TODO [#A] implement a function that will mark N text objects if N != nil.
 *** DONE m - set mark
 *** DONE b  - select whole buffer
 *** DONE u  - mark until char
@@ -105,8 +108,13 @@
 *** DONE e - enlarge window
 ** TODO 0..9 - numeric argument
 
-* GENERAL FIXES
-** TODO configure cursors
+
+* GENERAL TASKS
+
+** TODO make a handful of functions to wrap 
+** TODO write a handful of decent text-manipulation functions
+   - study multiple-cursors, maybe use mc/split on 
+** DONE configure cursors
 ** TODO fix keyboard-quit for mc
 ** TODO ADD g AS - QUIT TO EVERY PREFIX
 ** TODO ADD :name 
