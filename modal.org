@@ -35,12 +35,14 @@
 ** DONE .  - scroll up
 ** DONE ,  - scroll down
 ** TODO a  - _vacant_
-** TODO h  - _vacant_
+** TODO h  - prefix for mode-specific commands
+*** TODO smartparens mode commands
+*** TODO mode specific compilation commads
 ** DONE c  - copy
 ** DONE v  - yank
 ** DONE t  - undo
 ** DONE r  - ryo repeat
-** TODO ?  - toggle help buffer
+** TODO ?  - toggle root help buffer
 *** TODO implement root help buffer and help buffer for each prefix key
 ** DONE g  - keyboard quit (for exit)
 ** TODO e  - prefix for extended text manipulation (manipulation, not marking/selection) [CAN BE EXTENDED]
@@ -107,7 +109,7 @@
 *** DONE s - shrink window
 *** DONE e - enlarge window
 ** TODO 0..9 - numeric argument
-
+   
 
 * GENERAL TASKS
 
@@ -116,7 +118,8 @@
    - study multiple-cursors, maybe use mc/split on 
 ** DONE configure cursors
 ** TODO fix keyboard-quit for mc
-** TODO ADD g AS - QUIT TO EVERY PREFIX
+** TODO ADD g AS "GO BACK" TO EVERY PREFIX 
+** TODO ADD G AS "KEYBOARD QUIT" TO EVERY PREFIX
 ** TODO ADD :name 
 
 * KEYS (draft)

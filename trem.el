@@ -814,7 +814,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("e" (("k" trem-open-above :norepeat t)
 	 ("i" trem-open-below :norepeat t)
 	 ("c" capitalize-dwim :norepeat t)
-	 ("o" open-line)
+	 ("o" open-line :exit t)
 	 ("j" electric-newline-and-maybe-indent :exit t)
 	 ("u" upcase-dwim :norepeat t)
 	 ("l" downcase-dwim :norepeat t)
@@ -844,7 +844,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ;; marking
    ("m" (("m" set-mark-command :norepeat t)
 	 ("b" mark-whole-buffer :norepeat t)
-	 ("u" trem-select-to-char :first '(trem-set-mark-here)) ;; BORKED
+	 ;;("u" trem-select-to-char :first '(trem-set-mark-here)) ;; BORKED
 	 ("i" (("i" er/mark-inside-pairs)
 	       ("k" er/mark-outside-quotes))
 	  :name "inside") 
@@ -857,7 +857,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("e" er/expand-region)
 	 ("c" er/contract-region)
 	 ("w" er/mark-word)
-	 ("n" mc/mark-next)
+	 ;; ("n" mc/mark-next)
 	 ;; TODO: MARK SEVERAL TEXT OBJECTS OF THE SAME CLASS, MARK LINE
 	 ))
    
