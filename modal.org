@@ -37,7 +37,7 @@
 ** TODO a  - _vacant_
 ** TODO h  - prefix for mode-specific commands
 *** TODO smartparens mode commands
-*** TODO mode specific compilation commads
+*** TODO mode specific compilation commands
 ** DONE c  - copy
 ** DONE v  - yank
 ** DONE t  - undo
@@ -112,6 +112,8 @@
    
 
 * GENERAL TASKS
+
+** TODO trem-d should use smartparens
 
 ** TODO make a handful of functions to wrap 
 ** TODO write a handful of decent text-manipulation functions

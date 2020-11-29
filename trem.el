@@ -646,6 +646,7 @@ but I like this behavior better."
   (unless (use-region-p) (set-mark (point)))
   (forward-line count))
 
+;; TODO MAKE USE OF SMART-PARENS!
 (defun trem-d (count)
   "Kill selected text or COUNT chars."
   (interactive "p")
