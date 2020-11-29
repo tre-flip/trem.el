@@ -113,8 +113,10 @@
 
 * GENERAL TASKS
 
-** TODO trem-d should use smartparens
+** TODO integrate smartparens
+   https://ebzzry.io/en/emacs-pairs/
 
+** TODO trem-d should use smartparens
 ** TODO make a handful of functions to wrap 
 ** TODO write a handful of decent text-manipulation functions
    - study multiple-cursors, maybe use mc/split on 

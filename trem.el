@@ -827,7 +827,8 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ;; wrap selection into something
 	 ("w" (("g" nil :name "quit")
 	       )
-	  :name "wrap")))
+	  :name "wrap"))
+    :name "editing commands")
 
    ;; execution
    ("x" (("e" execute-extended-command :norepeat t)
@@ -836,10 +837,14 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
    ;; navigation
    ("n" (("i" beginning-of-buffer :norepeat t)
+	 ("g" "C-g" :name "quit" :norepeat t)
 	 ("k" end-of-buffer :norepeat t)
 	 ("j" beginning-of-line :norepeat t)
 	 ("l" end-of-line :norepeat t)
 	 ("n" goto-line :norepeat t)
+	 ;; TODO ADD SMARTPARENS MOVEMENT
+	 ("s" (("g" "C-g"))
+	  :name "smartparens movement")
 	 ))
 
    ;; marking
