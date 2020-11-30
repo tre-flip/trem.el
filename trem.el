@@ -786,11 +786,14 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("g" "C-g" :norepeat t) ;; universal quit
 
    ;; editing, general text manipulation (no marking or selection) <TODO>
-   ("e" (("k" trem-open-above :norepeat t)
+   ("e" (("g" nil :name "abort" :exit t)
+	 (";" comment-region :norepeat t)
+	 ("k" trem-open-above :norepeat t)
 	 ("i" trem-open-below :norepeat t)
 	 ("c" capitalize-dwim :norepeat t)
 	 ("m" trem-d :exit t :name "modify")
-	 ("o" open-line :exit t)
+	 ("o" open-line :exit t
+	  :name "open line and write")
 	 ("j" electric-newline-and-maybe-indent :exit t
 	  :name "electric open")
 	 ("s" split-line)
@@ -814,7 +817,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
    ;; navigation
    ("n" (("i" beginning-of-buffer :norepeat t)
-	 ("g" "C-g" :name "quit" :norepeat t)
+	 ("g" nil :name "abort" :norepeat t)
 	 ("k" end-of-buffer :norepeat t)
 	 ("j" beginning-of-line :norepeat t)
 	 ("l" end-of-line :norepeat t)

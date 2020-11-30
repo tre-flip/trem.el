@@ -36,7 +36,6 @@
 ** DONE ,  - scroll down
 ** TODO a  - _vacant_
 ** TODO h  - prefix for mode-specific commands
-*** TODO smartparens mode commands
 *** TODO mode specific compilation commands
 ** DONE c  - copy
 ** DONE v  - yank
@@ -80,7 +79,7 @@
 *** DONE b    - goto buffer
 *** DONE l    - list buffers
 *** DONE o    - open file
-** TODO s  - prefix for search menu [BORKED]
+** TODO [#A] s  - prefix for search menu [BORKED]
 *** TODO s  - isearch forward
 *** TODO r  - isearch backward
 ** TODO m  - prefix for marking, selection and multiple cursors [CAN BE EXTENDED]
@@ -108,7 +107,7 @@
 *** DONE u - previous window
 *** DONE s - shrink window
 *** DONE e - enlarge window
-** TODO 0..9 - numeric argument
+** DONE 0..9 - numeric argument
    
 
 * GENERAL TASKS
