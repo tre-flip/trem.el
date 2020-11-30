@@ -837,6 +837,10 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
  	 ("o" (("i" er/mark-outside-pairs)
 	       ("k" er/mark-outside-quotes))
 	  :name "outside")
+	 ("b" mc/mark-previous-like-this
+	  :name "backward like this")
+	 ("f" mc/mark-next-like-this
+	  :name "forward like this")
  	 ("p" er/mark-paragraph)
 	 ("s" er/mark-symbol)
 	 ("ts" er/mark-text-sentence)
@@ -885,7 +889,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("b" switch-to-buffer)))
 
    ;; exit modal mode
-   ("<menu>" trem-modal-mode :norepeat t)
+   ;;("<menu>" trem-modal-mode :norepeat t :mc-all 0)
 
    ;; window management commands
    ("w" (("g" nil :norepeat t :name "abort")
@@ -896,6 +900,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("s" shrink-window)
 	 ("n" make-frame-command :norepeat t)
 	 ("u" trem-prev-window)
+	 ("s" delete-other-windows :norepeat t)
 	 ("o" other-window :norepeat t)))))
 
 
