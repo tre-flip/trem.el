@@ -14,7 +14,9 @@
 (require 'org-macs)
 (require 'seq)
 (require 'subr-x)
+(require 'smartparens)
 (require 'expand-region)
+(require 'the-org-mode-expansions)
 (require 'multiple-cursors)
 
 ;; <<< BEGIN MODAL >>>
@@ -551,6 +553,29 @@ effectively reverse the (problematic) order of two `trem-exchange' calls."
 
 ;; <<< BEGIN UTILITIES >>>
 
+(defun trem-mark-line ()
+  "Select current line."
+  (interactive)
+  (if (region-active-p)
+      (progn
+        (forward-line 1)
+        (end-of-line))
+    (progn
+      (end-of-line)
+      (set-mark (line-beginning-position)))))
+
+(defun trem-mark-block ()
+  "Mark between lines"
+  (interactive)
+  (if (region-active-p)
+      (re-search-forward "\n[ \t]*\n" nil "move")
+    (progn
+      (skip-chars-forward " \n\t")
+      (when (re-search-backward "\n[ \t]*\n" nil "move")
+        (re-search-forward "\n[ \t]*\n"))
+      (push-mark (point) t t)
+      (re-search-forward "\n[ \t]*\n" nil "move"))))
+
 ;; extend it to scroll arbitrary amount of lines
 (defun trem-scroll-up ()
   (interactive)
@@ -629,49 +654,17 @@ Ignores CHAR at point."
       (trem-select-up-to-char count trem-last-char-selected-to)
     (trem-select-to-char count trem-last-char-selected-to)))
 
-(defun trem-x (count)
-  "Select COUNT lines from the current line.
-
-Note that trem's x doesn't behave exactly like this,
-but I like this behavior better."
-  (interactive "p")
-  (beginning-of-line)
-  (set-mark (point))
-  (forward-line count))
-
-(defun trem-X (count)
-  "Extend COUNT lines from the current line."
-  (interactive "p")
-  (beginning-of-line)
-  (unless (use-region-p) (set-mark (point)))
-  (forward-line count))
-
 ;; TODO MAKE USE OF SMART-PARENS!
 (defun trem-d (count)
   "Kill selected text or COUNT chars."
   (interactive "p")
-  (if (use-region-p)
-      (kill-region (region-beginning) (region-end))
-    (delete-char count t)))
-
-(defun trem-p (count)
-  "Yank COUNT times after the point."
-  (interactive "p")
-  (dotimes (_ count) (save-excursion (yank))))
-
-(defun trem-downcase ()
-  "Downcase region."
-  (interactive)
-  (if (use-region-p)
-      (downcase-region (region-beginning) (region-end))
-    (downcase-region (point) (+ 1 (point)))))
-
-(defun trem-upcase ()
-  "Upcase region."
-  (interactive)
-  (if (use-region-p)
-      (upcase-region (region-beginning) (region-end))
-    (upcase-region (point) (1+ (point)))))
+  (if (equal smartparens-strict-mode t)
+      (if (use-region-p)
+	  (sp-kill-region (region-beginning) (region-end))
+	(sp-delete-char count))
+    (if (use-region-p)
+	(kill-region (region-beginning) (region-end))
+      (delete-char count t)))) 
 
 (defun trem-replace-char (char)
   "Replace selection with CHAR."
@@ -702,6 +695,7 @@ but I like this behavior better."
   (end-of-line)
   (dotimes (_ count)
     (electric-newline-and-maybe-indent)))
+
 (defun trem-open-above (count)
   "Open COUNT lines above the cursor and go into insert mode."
   (interactive "p")
@@ -709,18 +703,6 @@ but I like this behavior better."
   (dotimes (_ count)
     (newline)
     (forward-line -1)))
-
-(defun trem-join ()
-  "Join the next line to the current one."
-  (interactive) (join-line 1))
-
-(defun trem-Y (count)
-  "Copy to the end of COUNT lines."
-  (interactive "p")
-  (save-excursion
-    (let ((cur (point)))
-      (move-end-of-line count)
-      (kill-ring-save cur (point)))))
 
 (defun trem-indent-right (count)
   "Indent the region or COUNT lines right to tab stop."
@@ -742,16 +724,9 @@ but I like this behavior better."
           (end (save-excursion (forward-line count) (point))))
       (indent-rigidly beg end -2))))
 
-(defun trem-gg (count)
-  "Go to the beginning of the buffer or the COUNTth line."
-  (interactive "p")
-  (goto-char (point-min))
-  (when count (forward-line (1- count))))
-
 ;; Until this function is accepted upstream, we inline it here
 (defun mc/split-region (beg end search)
   "Split region each time SEARCH occurs between BEG and END.
-
 This can be thought of as an inverse to `mc/mark-all-in-region'."
   (interactive "r\nsSplit on: ")
   (let ((case-fold-search nil))
@@ -803,20 +778,23 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
    ;; killing/yanking, undoing, repeating
    ("d" trem-d :norepeat t)
-   ("C" trem-d :exit t :name "change")
    ("c" kill-ring-save :norepeat t)
    ("v" yank :norepeat t)
-   ("M-v" yank-pop)
+   ("V" yank-pop)
    ("t" undo :norepeat t)
    ("r" trem-modal-repeat :norepeat t)
    ("g" "C-g" :norepeat t) ;; universal quit
 
-   ;; general text manipulation (no marking or selection) <TODO>
+   ;; editing, general text manipulation (no marking or selection) <TODO>
    ("e" (("k" trem-open-above :norepeat t)
 	 ("i" trem-open-below :norepeat t)
 	 ("c" capitalize-dwim :norepeat t)
+	 ("m" trem-d :exit t :name "modify")
 	 ("o" open-line :exit t)
-	 ("j" electric-newline-and-maybe-indent :exit t)
+	 ("j" electric-newline-and-maybe-indent :exit t
+	  :name "electric open")
+	 ("s" split-line)
+	 ("S" split-line :exit t)
 	 ("u" upcase-dwim :norepeat t)
 	 ("l" downcase-dwim :norepeat t)
 	 ("h" hlt-highlight-region :norepeat t)
@@ -824,14 +802,13 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	       ("s" trem-replace-selection)
 	       ("c" trem-replace-char))
 	  :name "regex-operations")
-	 ;; wrap selection into something
-	 ("w" (("g" nil :name "quit")
-	       )
-	  :name "wrap"))
+	 ;; wrap selection into something (to be extended)
+	 )
     :name "editing commands")
 
    ;; execution
    ("x" (("e" execute-extended-command :norepeat t)
+	 ("t" eshell :norepeat t)
 	 ("s" trem-shell-command :norepeat t)
 	 ("p" trem-shell-pipe :norepeat t)))
 
@@ -843,31 +820,41 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("l" end-of-line :norepeat t)
 	 ("n" goto-line :norepeat t)
 	 ;; TODO ADD SMARTPARENS MOVEMENT
-	 ("s" (("g" "C-g"))
-	  :name "smartparens movement")
+	 ("s" (("g" "C-g")
+	       ("l" sp-next-sexp)
+	       ("j" sp-previous-sexp)
+	       ("i" sp-backward-up-sexp)
+	       ("k" sp-down-sexp))
+	  :name "smartparens movement ")
 	 ))
 
    ;; marking
    ("m" (("m" set-mark-command :norepeat t)
 	 ("b" mark-whole-buffer :norepeat t)
-	 ;;("u" trem-select-to-char :first '(trem-set-mark-here)) ;; BORKED
 	 ("i" (("i" er/mark-inside-pairs)
 	       ("k" er/mark-outside-quotes))
-	  :name "inside") 
+	  :name "inside")
  	 ("o" (("i" er/mark-outside-pairs)
 	       ("k" er/mark-outside-quotes))
 	  :name "outside")
- 	 ;;("p" er/mark-paragraph)
+ 	 ("p" er/mark-paragraph)
 	 ("s" er/mark-symbol)
 	 ("ts" er/mark-text-sentence)
 	 ("e" er/expand-region)
 	 ("c" er/contract-region)
 	 ("w" er/mark-word)
-	 ;; ("n" mc/mark-next)
+	 ("l" trem-mark-line)
+	 ("B" trem-mark-block)
 	 ;; TODO: MARK SEVERAL TEXT OBJECTS OF THE SAME CLASS, MARK LINE
-	 ))
-   
-   ;; Numeric arguments
+	 )
+    :name "marking")
+
+   ("y" (("l" mc/edit-lines)
+	 ("n" mc/insert-numbers)
+	 ("c" mc/insert-letters))
+    :name "multiple cursors")
+
+   ;; numeric arguments
    ("0" "M-0" :norepeat t)
    ("1" "M-1" :norepeat t)
    ("2" "M-2" :norepeat t)
@@ -884,8 +871,8 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
   (trem-modal-keys
    (:mc-all 0)
    ;; search BORKED
-   ("s" (("s" isearch-repeat-forward)
-	 ("b" isearch-repeat-backward)))
+   ("s" (("s" isearch-forward)
+	 ("b" isearch-backward)))
 
    ;; buffer/frame related commands
    ("b" (("k" kill-buffer)
@@ -901,14 +888,15 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("<menu>" trem-modal-mode :norepeat t)
 
    ;; window management commands
-   ("w" (("h" split-window-below)
-	 ("v" split-window-right)
-	 ("d" delete-window)
+   ("w" (("g" nil :norepeat t :name "abort")
+	 ("h" split-window-below :norepeat t)
+	 ("v" split-window-right :norepeat t)
+	 ("d" delete-window :norepeat t)
 	 ("e" enlarge-window)
 	 ("s" shrink-window)
-	 ("n" make-frame-command)
+	 ("n" make-frame-command :norepeat t)
 	 ("u" trem-prev-window)
-	 ("o" other-window)))))
+	 ("o" other-window :norepeat t)))))
 
 
 ;; <<< END BINDINGS >>>
