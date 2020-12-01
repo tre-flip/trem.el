@@ -1,0 +1,15 @@
+* TASKS
+** TODO make it more ergonomic
+   - ban all single-hand command sequences, every complex command should use both hands _alternately_
+   - don't bind (q a z p ; / [ ] ' shift ctrl) to minimize usage of pinkies
+   - forget about mnemonics, it's not a problem with which-key
+   - use _space_ as a mod-key
+
+** TODO find or write a better key engine
+   - implement several navigation modes, including text object navigation
+   - switching betwen text objects should be efficient and fast
+   - there should be a dedicated key for entering text-object-mode for every type of text object.
+
+** TODO get rid of annoying quirks
+   - map russian characters
+   - map capital charactes (?)
