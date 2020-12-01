@@ -787,7 +787,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
    ;; editing, general text manipulation (no marking or selection) <TODO>
    ("e" (("g" nil :name "abort" :exit t)
-	 (";" comment-region :norepeat t)
+	 (";" sp-comment :norepeat t)
 	 ("k" trem-open-above :norepeat t)
 	 ("i" trem-open-below :norepeat t)
 	 ("c" capitalize-dwim :norepeat t)
@@ -828,7 +828,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	       ("j" sp-previous-sexp)
 	       ("i" sp-backward-up-sexp)
 	       ("k" sp-down-sexp))
-	  :name "smartparens movement ")
+	  :name "sp-movement")
 	 ))
 
    ;; marking
@@ -840,10 +840,8 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
  	 ("o" (("i" er/mark-outside-pairs)
 	       ("k" er/mark-outside-quotes))
 	  :name "outside")
-	 ("b" mc/mark-previous-like-this
-	  :name "backward like this")
 	 ("f" mc/mark-next-like-this
-	  :name "forward like this")
+	  :name "forward-like-this")
  	 ("p" er/mark-paragraph)
 	 ("s" er/mark-symbol)
 	 ("ts" er/mark-text-sentence)
@@ -903,7 +901,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 	 ("s" shrink-window)
 	 ("n" make-frame-command :norepeat t)
 	 ("u" trem-prev-window)
-	 ("s" delete-other-windows :norepeat t)
+	 ("k" delete-other-windows :norepeat t)
 	 ("o" other-window :norepeat t)))))
 
 
