@@ -19,16 +19,18 @@
    - map capital charactes (?)
    - add more convinient bindings that exit modal state properly
    - all unused single-key presses are nil 
-
+     
 * IDEAS
-
+  
 ** object manipulation 
-   - "special-key c" selects an object type when in modal mode, where _c_ is the first letter of text object name.
+   A sequence "special-key char" selects an object type when in modal mode, where _char_ is the first letter of text object name.
 
-   - objects form a hierarchy, where char is the highest object and buffer is the lowest object
+   Objects form a hierarchy, where char is the highest object and buffer is the lowest object
 
-*** bookmarks
-    - https://github.com/clemera/objed
-      - The expansion commands distinguish between block objects (objects built out of lines of text like paragraphs or text blocks with the same level of indentation and also comment blocks) and context objects (programming constructs like strings, brackets, comments or functions). This way you can quickly expand to the desired objects.
+* TOOLS
+  - https://www.emacswiki.org/emacs/Zones - persistent regions
+* BOOKMARKS
+  - https://github.com/clemera/objed
+    - The expansion commands distinguish between block objects (objects built out of lines of text like paragraphs or text blocks with the same level of indentation and also comment blocks) and context objects (programming constructs like strings, brackets, comments or functions). This way you can quickly expand to the desired objects.
 
 
