@@ -13,6 +13,7 @@
 (require 'cl-lib)
 (require 'org-macs)
 (require 'seq)
+(require 'avy)
 (require 'subr-x)
 (require 'smartparens)
 (require 'expand-region)
@@ -553,11 +554,34 @@ effectively reverse the (problematic) order of two `trem-exchange' calls."
 
 ;; <<< BEGIN UTILITIES >>>
 
+(defun trem-forward-word-and-mark ()
+  "Go one word forward and mark it."
+  (interactive)
+  (forward-word)
+  (forward-char)
+  (command-execute #'er/mark-word))
+
+(defun trem-backward-word-and-mark ()
+  "Go one word backward and mark it."
+  (interactive)
+  (backward-word)
+  (command-execute #'er/mark-word))
+
 (defun trem-goto-word-and-mark ()
   "Invoke avy to go to word and mark it."
   (interactive)
   (command-execute #'avy-goto-word-1)
   (command-execute #'er/expand-region))
+
+(defun trem-forward-symbol-and-mark ()
+  (interactive)
+  (forward-symbol 2)
+  (command-execute #'er/mark-symbol))
+
+(defun trem-backward-symbol-and-mark ()
+  (interactive)
+  (forward-symbol -1)
+  (command-execute #'er/mark-symbol))
 
 (defun trem-mark-line ()
   "Select current line."
@@ -589,10 +613,6 @@ effectively reverse the (problematic) order of two `trem-exchange' calls."
 (defun trem-scroll-down ()
   (interactive)
   (scroll-down 2))
-
-(defun trem-insert-mode () "Return to insert mode."
-       (interactive)
-       (trem-modal-mode 0))
 
 (defun trem-set-mark-if-inactive () "Set the mark if it isn't active."
        (interactive)

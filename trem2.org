@@ -17,6 +17,8 @@
 
 ** TODO implement noncontigous marking
 
+** TODO configure keyboard quit (g) to work in multiple-cursors mode
+
 ** TODO use avy more for faster movement
    - implemeted trem-goto-word-and-mark
 
