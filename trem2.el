@@ -782,29 +782,35 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
 ;; <<< BEGIN BINDINGS >>>
 
+;; SPC is a general modkey
+
 ;;;###autoload
 (defun trem-setup-keybinds ()
   "Set up default trem keybindings for normal mode."
   (global-subword-mode 1)
 
+  ;; commands that are repeated for all cursors
   (trem-modal-keys
 
    (:mc-all t)
 
-   ;; movement keys
+   ;; movement keys (char/line)  
    ("i" previous-line :norepeat t)
    ("j" backward-char :norepeat t)
    ("k" next-line     :norepeat t)
    ("l" forward-char  :norepeat t)
-   ("o" forward-word  :norepeat t)
-   ("u" backward-word :norepeat t)
 
+
+   ;; object movement (with varying object type, u/o)
+
+   
    ;; recenter/focus, scrolling
    ("f" recenter-top-bottom :norepeat t)
    ("." trem-scroll-up :norepeat t)
    ("," trem-scroll-down :norepeat t)
 
-   ;; killing/yanking, undoing, repeating
+   
+   ;; most used, killing/yanking, undoing, repeating
    ("d" trem-d :norepeat t)
    ("c" kill-ring-save :norepeat t)
    ("v" yank :norepeat t)
@@ -813,9 +819,10 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("r" trem-modal-repeat :norepeat t)
    ("g" "C-g" :norepeat t) ;; universal quit
 
+
    ;; editing, general text manipulation (no marking or selection) <TODO>
    
-
+   
    ;; execution
    
 
@@ -823,6 +830,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    
 
    ;; marking
+
    
    ;; numeric arguments
    ("0" "M-0" :norepeat t)
@@ -837,7 +845,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("9" "M-9" :norepeat t)
    ("-" "M--" :norepeat t))
 
-  ;; put these here because they shouldn't be repeated for all cursors
+  ;; commands that repeated for each cursor
   (trem-modal-keys
    ))
 
