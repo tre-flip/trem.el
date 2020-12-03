@@ -3,7 +3,8 @@
    - ban all single-hand command sequences, every complex command should use both hands _alternately_
    - don't bind (q a z p ; / [ ] ' shift ctrl) to minimize usage of pinkies
    - forget about mnemonics, it's not a problem with which-key
-   - use _space_ as a mod-key
+   - use _space_ as a mod-key, use it more (space space should insert space)
+   - probably use hydras to reduce the amount of keystrokes
 
 ** TODO implement text objects
    - switching betwen text objects should be efficient and fast
@@ -13,6 +14,21 @@
    - implement several navigation modes, including text object navigation
 
 ** TODO implement convinient isearch
+
+** TODO implement noncontigous marking
+
+** TODO use avy more for faster movement
+   - implemeted trem-goto-word-and-mark
+
+*** TODO implement a toplevel function for marking and navigation.
+
+** TODO add more evaluation commands
+
+** TODO add more 
+
+** TODO bind rect selection
+
+** TODO consider using forward-same-syntax  
 
 ** TODO get rid of annoying quirks
    - map russian characters
@@ -25,10 +41,16 @@
 ** object manipulation 
    A sequence "special-key char" selects an object type when in modal mode, where _char_ is the first letter of text object name.
 
-   Objects form a hierarchy, where char is the highest object and buffer is the lowest object
+   If avy is used to navigate to anywhere and mark-state is not nil, then expand region according to symbol in mark-state. _USE ADVICE TO IMPLEMENT IT_
 
 * TOOLS
-  - https://www.emacswiki.org/emacs/Zones - persistent regions
+  - phi-search
+    https://github.com/zk-phi/phi-search
+  - avy for fast navigation 
+    works fine in modal mode
+    https://github.com/abo-abo/avy
+  - zones.el (?)
+  https://www.emacswiki.org/emacs/Zones - persistent regions
 * BOOKMARKS
   - https://github.com/clemera/objed
     - The expansion commands distinguish between block objects (objects built out of lines of text like paragraphs or text blocks with the same level of indentation and also comment blocks) and context objects (programming constructs like strings, brackets, comments or functions). This way you can quickly expand to the desired objects.
