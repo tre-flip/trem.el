@@ -670,8 +670,7 @@ If already has just 1 whitespace, delete it."
   (interactive)
   (setq trem-marking-flag (not trem-marking-flag)))
 
-
-(defun xah-reformat-lines ( &optional @length)
+(defun trem-reformat-lines ( &optional @length)
   "Reformat current text block or selection into short lines or 1 long line.
 When called for the first time, change to one long line. Second call change it to multiple short lines. Repeated call toggles.
 
@@ -703,13 +702,13 @@ If `universal-argument' is called first, use the number value for min length of 
           (setq $p2 (point)))))
     (progn
       (if current-prefix-arg
-          (xah-reformat-to-multi-lines $p1 $p2 @length)
+          (trem-reformat-to-multi-lines $p1 $p2 @length)
         (if is-longline-p
-            (xah-reformat-to-multi-lines $p1 $p2 @length)
-          (xah-reformat-whitespaces-to-one-space $p1 $p2)))
+            (trem-reformat-to-multi-lines $p1 $p2 @length)
+          (trem-reformat-whitespaces-to-one-space $p1 $p2)))
       (put this-command 'is-longline-p (not is-longline-p)))))
 
-(defun xah-reformat-whitespaces-to-one-space (@begin @end)
+(defun trem-reformat-whitespaces-to-one-space (@begin @end)
   "Replace whitespaces by one space."
   (interactive "r")
   (save-excursion
@@ -728,7 +727,7 @@ If `universal-argument' is called first, use the number value for min length of 
           (re-search-forward "  +" nil "move")
         (replace-match " ")))))
 
-(defun xah-space-to-newline ()
+(defun trem-space-to-newline ()
   "Replace space sequence to a newline char.
 Works on current block or selection.
 
@@ -753,7 +752,7 @@ Version 2017-08-19"
         (while (re-search-forward " +" nil t)
           (replace-match "\n" ))))))
 
-(defun xah-comment-dwim ()
+(defun trem-comment-dwim ()
   "Like `comment-dwim', but toggle comment if cursor is not at end of line.
 
 URL `http://ergoemacs.org/emacs/emacs_toggle_comment_by_line.html'
@@ -773,10 +772,10 @@ Version 2016-10-25"
             (comment-or-uncomment-region $lbp $lep)
             (forward-line )))))))
 
-(defun xah-append-to-register-1 ()
+(defun trem-append-to-register-1 ()
   "Append current line or text selection to register 1.
 When no selection, append current line, with newline char.
-See also: `xah-paste-from-register-1', `copy-to-register'.
+See also: `trem-paste-from-register-1', `copy-to-register'.
 
 URL `http://ergoemacs.org/emacs/emacs_copy_append.html'
 Version 2015-12-08 2020-09-08"
@@ -790,9 +789,9 @@ Version 2015-12-08 2020-09-08"
                       (append-to-register ?1 (point-min) (point-max)))
     (message "Appended to register 1: 「%s」." (buffer-substring-no-properties $p1 $p2))))
 
-(defun xah-paste-from-register-1 ()
+(defun trem-paste-from-register-1 ()
   "Paste text from register 1.
-See also: `xah-copy-to-register-1', `insert-register'.
+See also: `trem-copy-to-register-1', `insert-register'.
 URL `http://ergoemacs.org/emacs/elisp_copy-paste_register_1.html'
 Version 2015-12-08"
   (interactive)
@@ -800,6 +799,10 @@ Version 2015-12-08"
     (delete-region (region-beginning) (region-end)))
   (insert-register ?1 t))
 
+(defun trem-next-delimiter ()
+  "Go to the next delimiter"
+  (interactive)
+  (re-search-forward "[\s(]" nil "move"))
 
 ;; <<< END UTILITIES >>>
 
@@ -822,7 +825,8 @@ Version 2015-12-08"
    ("j" backward-char :norepeat t)
    ("k" next-line     :norepeat t)
    ("l" forward-char  :norepeat t)
-   ("m" ) 
+   ("m" nil)
+   ("." nil) 
    ;; TODO: navigate between pairs using "m", "."
    ("SPC" (("g" nil :name "abort" :norepeat t)
 	   ("i" beginning-of-buffer :norepeat t)    
