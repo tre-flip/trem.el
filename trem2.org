@@ -37,6 +37,8 @@
    - map capital charactes (?)
    - add more convinient bindings that exit modal state properly
    - all unused single-key presses are nil 
+
+** TODO examine xah-fly-keys and steal good functions
      
 * IDEAS
   

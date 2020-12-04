@@ -20,7 +20,16 @@
 (require 'the-org-mode-expansions)
 (require 'multiple-cursors)
 
+;; <<< BEGIN GLOBALS >>>
+
+(defvar trem-marking-flag nil)
+
+;; <<< END GLOBALS >>>
+
+
 ;; <<< BEGIN MODAL >>>
+
+;; the following code is a hard fork of ryo-modal
 
 (defvar trem-modal-mode-map (make-sparse-keymap)
   "General bindings in trem-modal-mode.
@@ -458,135 +467,59 @@ This function is meant to unbind keys set with `trem-modal-set-key'."
 ;; <<< END SHELL >>>
 
 
-;; <<< BEGIN EXCHANGE >>> 
-(defcustom trem-exchange-highlight-face 'highlight
-  "Face used to highlight marked area."
-  :type 'sexp
-  :group 'trem-exchange)
-
-(defvar trem-exchange--position nil "Text position which will be exchanged.")
-
-(defvar trem-exchange--overlays nil "Overlays used to highlight marked area.")
-
-(defun trem-exchange--highlight (beg end)
-  "Highlight BEG to END for exchange."
-  (let ((o (make-overlay beg end nil t nil)))
-    (overlay-put o 'face trem-exchange-highlight-face)
-    (add-to-list 'trem-exchange--overlays o)))
-
-(defun trem-exchange--clean ()
-  "Clean up after exchange."
-  (setq trem-exchange--position nil)
-  (mapc 'delete-overlay trem-exchange--overlays)
-  (setq trem-exchange--overlays nil))
-
-(defun trem-exchange (beg end)
-  "Mark the region from BEG to END for exchange."
-  (interactive "r")
-  (let ((beg-marker (copy-marker beg t))
-        (end-marker (copy-marker end nil)))
-    (if (null trem-exchange--position)
-        ;; call without trem-exchange--position set: store region
-        (progn
-          (setq trem-exchange--position (list (current-buffer) beg-marker end-marker))
-          ;; highlight area marked to exchange
-          (trem-exchange--highlight beg end))
-      ;; secondary call: do exchange
-      (cl-destructuring-bind
-          (orig-buffer orig-beg orig-end) trem-exchange--position
-        (trem-exchange--do-swap (current-buffer) orig-buffer
-                                   beg-marker end-marker
-                                   orig-beg orig-end
-                                   #'delete-and-extract-region #'insert)))))
-
-(defun trem-exchange--do-swap (curr-buffer orig-buffer curr-beg curr-end orig-beg
-                                              orig-end extract-fn insert-fn)
-  "This function does the real exchange work. Here's the detailed steps:
-
-1. call EXTRACT-FN with ORIG-BEG and ORIG-END to extract ORIG-TEXT
-from ORIG-BUFFER.
-2. call EXTRACT-FN with CURR-BEG and CURR-END to extract CURR-TEXT
-from CURR-BUFFER.
-3. go to ORIG-BEG and then call INSERT-FN with CURR-TEXT.
-4. go to CURR-BEG and then call INSERT-FN with ORIG-TEXT.
-After step 2, the two markers of the same beg/end pair (curr or orig)
-will point to the same position. So if ORIG-BEG points to the same position
-of CURR-END initially, ORIG-BEG and CURR-BEG will point to the same position
-before step 3. Because CURR-BEG is a marker which moves after insertion, the
-insertion in step 3 will push it to the end of the newly inserted text,
-thus resulting incorrect behaviour.
-To fix this edge case, we swap two extracted texts before step 3 to
-effectively reverse the (problematic) order of two `trem-exchange' calls."
-  (if (eq curr-buffer orig-buffer)
-      ;; in buffer exchange
-      (let ((adjacent  (equal (marker-position orig-beg) (marker-position curr-end)))
-            (orig-text (funcall extract-fn orig-beg orig-end))
-            (curr-text (funcall extract-fn curr-beg curr-end)))
-        ;; swaps two texts if adjacent is set
-        (let ((orig-text (if adjacent curr-text orig-text))
-              (curr-text (if adjacent orig-text curr-text)))
-          (save-excursion
-            (goto-char orig-beg)
-            (funcall insert-fn curr-text)
-            (goto-char curr-beg)
-            (funcall insert-fn orig-text))))
-    ;; exchange across buffers
-    (let ((orig-text (with-current-buffer orig-buffer
-                       (funcall extract-fn orig-beg orig-end)))
-          (curr-text (funcall extract-fn curr-beg curr-end)))
-      (save-excursion
-        (with-current-buffer orig-buffer
-          (goto-char orig-beg)
-          (funcall insert-fn curr-text))
-        (goto-char curr-beg)
-        (funcall insert-fn orig-text))))
-  (trem-exchange--clean))
-
-(defun trem-exchange-cancel ()
-  "Cancel current pending exchange."
-  (interactive)
-  (if (null trem-exchange--position)
-      (message "No pending exchange")
-    (trem-exchange--clean)
-    (message "Exchange cancelled")))
-
-;; <<< END EXCHANGE >>> 
-
 ;; <<< BEGIN UTILITIES >>>
 
-(defun trem-forward-word-and-mark ()
-  "Go one word forward and mark it."
+(defun trem-select-block ()
+  "Select the current/next block of text between blank lines.
+If region is active, extend selection downward by block."
+  (interactive)
+  (if (use-region-p)
+      (re-search-forward "\n[ \t]*\n" nil "move")
+    (progn
+      (skip-chars-forward " \n\t")
+      (when (re-search-backward "\n[ \t]*\n" nil "move")
+        (re-search-forward "\n[ \t]*\n"))
+      (push-mark (point) t t)
+      (re-search-forward "\n[ \t]*\n" nil "move"))))
+
+(defun trem-forward-word-maybe-mark ()
+  "Go one word forward maybe mark it."
   (interactive)
   (forward-word)
-  (forward-char)
-  (er/mark-word))
+  (when trem-marking-flag
+      (forward-char)
+      (er/mark-word)))
 
-(defun trem-backward-word-and-mark ()
-  "Go one word backward and mark it."
+(defun trem-backward-word-maybe-mark ()
+  "Go one word backward maybe mark it."
   (interactive)
   (backward-word)
-  (er/mark-word))
+  (when trem-marking-flag
+    (er/mark-word)))
 
-(defun trem-goto-word-and-mark ()
-  "Invoke avy to go to word and mark it."
+(defun trem-goto-word-maybe-mark ()
+  "Invoke avy to go to word, maybe mark it."
   (interactive)
-  (command-execute #'avy-goto-word-1)
-  (command-execute #'er/expand-region))
+  (commmaybe-execute #'avy-goto-word-1)
+  (when trem-marking-flag
+    (commmaybe-execute #'er/expand-region)))
 
-(defun trem-forward-symbol-and-mark ()
-  "Go one word forward and mark it."
+(defun trem-forward-symbol-maybe-mark ()
+  "Go one word forward maybe mark it."
   (interactive)
   (forward-symbol 2)
-  (er/mark-symbol))
+  (when trem-marking-flag
+    (er/mark-symbol)))
 
-(defun trem-backward-symbol-and-mark ()
-  "Go one word backward and mark it."
+(defun trem-backward-symbol-maybe-mark ()
+  "Go one word backward maybe mark it."
   (interactive)
   (forward-symbol -1)
-  (er/mark-symbol))
+  (when trem-marking-flag
+    (er/mark-symbol)))
 
 (defun trem-mark-line ()
-  "Select current line."
+  "Select current line, or select next line if called again."
   (interactive)
   (if (region-active-p)
       (progn
@@ -595,18 +528,6 @@ effectively reverse the (problematic) order of two `trem-exchange' calls."
     (progn
       (end-of-line)
       (set-mark (line-beginning-position)))))
-
-(defun trem-mark-block ()
-  "Mark between lines"
-  (interactive)
-  (if (region-active-p)
-      (re-search-forward "\n[ \t]*\n" nil "move")
-    (progn
-      (skip-chars-forward " \n\t")
-      (when (re-search-backward "\n[ \t]*\n" nil "move")
-        (re-search-forward "\n[ \t]*\n"))
-      (push-mark (point) t t)
-      (re-search-forward "\n[ \t]*\n" nil "move"))))
 
 ;; extend it to scroll arbitrary amount of lines
 (defun trem-scroll-up ()
@@ -623,13 +544,6 @@ effectively reverse the (problematic) order of two `trem-exchange' calls."
 (defun trem-set-mark-here () "Set the mark at the location of the point."
        (interactive) (set-mark (point)))
 
-(defun trem-deactivate-mark ()
-  "Deactivate the mark.
-
-Deactivate the mark unless mark-region-mode is active."
-  (interactive)
-  (unless rectangle-mark-mode (deactivate-mark)))
-
 (defun trem-backward-symbol (count)
   "Move backward COUNT times by symbol."
   (interactive "p")
@@ -640,49 +554,6 @@ Deactivate the mark unless mark-region-mode is active."
   (interactive "p")
   (forward-same-syntax (- count)))
 
-(defvar trem-last-t-or-f ?f
-  "Using t or f command sets this variable.")
-
-(defvar-local trem-last-char-selected-to " "
-  "This variable is updated by trem-select-to-char.")
-
-(defun trem-select-up-to-char (arg char)
-  "Select up to, but not including ARGth occurrence of CHAR.
-Case is ignored if `case-fold-search' is non-nil in the current buffer.
-Goes backward if ARG is negative; error if CHAR not found.
-Ignores CHAR at point."
-  (interactive "p\ncSelect up to char: ")
-  (setq trem-last-char-selected-to char)
-  (setq trem-last-t-or-f ?t)
-  (let ((direction (if (>= arg 0) 1 -1)))
-    (forward-char direction)
-    (unwind-protect
-	    (search-forward (char-to-string char) nil nil arg)
-	  (backward-char direction))
-    (point)))
-
-(defun trem-select-to-char (arg char)
-  "Select up to, and including ARGth occurrence of CHAR.
-Case is ignored if `case-fold-search' is non-nil in the current buffer.
-Goes backward if ARG is negative; error if CHAR not found.
-Ignores CHAR at point."
-  (interactive "p\ncSelect to char: ")
-  (setq trem-last-char-selected-to char)
-  (setq trem-last-t-or-f ?f)
-  (let ((direction (if (>= arg 0) 1 -1)))
-    (forward-char direction)
-    (unwind-protect
-	    (search-forward (char-to-string char) nil nil arg))
-    (point)))
-
-(defun trem-select-again (&optional count)
-  "Expand the selection COUNT times to whatever the last 't' command was."
-  (interactive "p")
-  (if (eq trem-last-t-or-f ?t)
-      (trem-select-up-to-char count trem-last-char-selected-to)
-    (trem-select-to-char count trem-last-char-selected-to)))
-
-;; TODO MAKE USE OF SMART-PARENS!
 (defun trem-d (count)
   "Kill selected text or COUNT chars."
   (interactive "p")
@@ -694,20 +565,6 @@ Ignores CHAR at point."
 	(kill-region (region-beginning) (region-end))
       (delete-char count t)))) 
 
-(defun trem-replace-char (char)
-  "Replace selection with CHAR."
-  (interactive "cReplace with char: ")
-  (mc/execute-command-for-all-cursors
-   (lambda () (interactive)
-     (if (use-region-p)
-         (progn (let ((region-size (- (region-end) (region-beginning))))
-	              (delete-region (region-beginning) (region-end))
-	              (mc/save-excursion
-		           (insert-char char region-size t))))
-       (progn (delete-region (point) (1+ (point)))
-	          (mc/save-excursion
-	           (insert-char char)))))))
-
 (defun trem-replace-selection ()
   "Replace selection with killed text."
   (interactive)
@@ -717,68 +574,234 @@ Ignores CHAR at point."
     (progn (delete-region (point) (1+ (point)))
 	       (yank))))
 
-(defun trem-open-below (count)
-  "Open COUNT lines under the cursor and go into insert mode."
-  (interactive "p")
-  (end-of-line)
-  (dotimes (_ count)
-    (electric-newline-and-maybe-indent)))
+(defun trem-forward-sexp-maybe-mark ()
+  (interactive)
+  (sp-beginning-of-next-sexp)
+  (backward-char)
+  (when trem-marking-flag
+    (sp-mark-sexp)))
 
-(defun trem-open-above (count)
-  "Open COUNT lines above the cursor and go into insert mode."
-  (interactive "p")
-  (beginning-of-line)
-  (dotimes (_ count)
-    (newline)
-    (forward-line -1)))
+(defun trem-delete-blank-lines ()
+  "Delete all newline around cursor."
+  (interactive)
+  (let ($p3 $p4)
+          (skip-chars-backward "\n")
+          (setq $p3 (point))
+          (skip-chars-forward "\n")
+          (setq $p4 (point))
+          (delete-region $p3 $p4)))
 
-(defun trem-indent-right (count)
-  "Indent the region or COUNT lines right to tab stop."
-  (interactive "p")
+(defun trem-fly-delete-spaces ()
+  "Delete space, tab, IDEOGRAPHIC SPACE (U+3000) around cursor.
+Version 2019-06-13"
+  (interactive)
+  (let (p1 p2)
+    (skip-chars-forward " \t　")
+    (setq p2 (point))
+    (skip-chars-backward " \t　")
+    (setq p1 (point))
+    (delete-region p1 p2)))
+
+(defun trem-shrink-whitespaces ()
+  "Remove whitespaces around cursor to just one, or none.
+
+Shrink any neighboring space tab newline characters to 1 or none.
+If cursor neighbor has space/tab, toggle between 1 or 0 space.
+If cursor neighbor are newline, shrink them to just 1.
+If already has just 1 whitespace, delete it."
+  (interactive)
+  (let* (
+         ($eol-count 0)
+         ($p0 (point))
+         $p1 ; whitespace begin
+         $p2 ; whitespace end
+         ($charBefore (char-before))
+         ($charAfter (char-after ))
+         ($space-neighbor-p (or (eq $charBefore 32) (eq $charBefore 9) (eq $charAfter 32) (eq $charAfter 9)))
+         $just-1-space-p
+         )
+    (skip-chars-backward " \n\t　")
+    (setq $p1 (point))
+    (goto-char $p0)
+    (skip-chars-forward " \n\t　")
+    (setq $p2 (point))
+    (goto-char $p1)
+    (while (search-forward "\n" $p2 t )
+      (setq $eol-count (1+ $eol-count)))
+    (setq $just-1-space-p (eq (- $p2 $p1) 1))
+    (goto-char $p0)
+    (cond
+     ((eq $eol-count 0)
+      (if $just-1-space-p
+          (trem-fly-delete-spaces)
+        (progn (trem-fly-delete-spaces)
+               (insert " ")))
+      )
+     ((eq $eol-count 1)
+      (if $space-neighbor-p
+          (trem-fly-delete-spaces)
+        (progn (trem-delete-blank-lines) (insert " "))))
+     ((eq $eol-count 2)
+      (if $space-neighbor-p
+          (trem-fly-delete-spaces)
+        (progn
+          (trem-delete-blank-lines)
+          (insert "\n"))))
+     ((> $eol-count 2)
+      (if $space-neighbor-p
+          (trem-fly-delete-spaces)
+        (progn
+          (goto-char $p2)
+          (search-backward "\n" )
+          (delete-region $p1 (point))
+          (insert "\n"))))
+     (t (progn
+          (message "nothing done. logic error 40873. shouldn't reach here" ))))))
+
+(defun trem-toggle-mark ()
+  "Set mark if it's inactive, deactivate it if it's active."
+  (interactive)
   (if (use-region-p)
-      (progn (indent-rigidly (region-beginning) (region-end) 2)
-             (setq deactivate-mark nil))
-    (let ((beg (save-excursion (beginning-of-line) (point)))
-          (end (save-excursion (forward-line count) (point))))
-      (indent-rigidly beg end 2))))
+      (deactivate-mark)
+      (set-mark-command)))
 
-(defun trem-indent-left (count)
-  "Indent the region or COUNT lines left to tab stop."
-  (interactive "p")
-  (if (use-region-p)
-      (progn (indent-rigidly (region-beginning) (region-end) -2)
-             (setq deactivate-mark nil))
-    (let ((beg (save-excursion (beginning-of-line) (point)))
-          (end (save-excursion (forward-line count) (point))))
-      (indent-rigidly beg end -2))))
+(defun trem-toggle-marking ()
+  "Swith between marking navigation and standard navigation."
+  (interactive)
+  (setq trem-marking-flag (not trem-marking-flag)))
 
-;; Until this function is accepted upstream, we inline it here
-(defun mc/split-region (beg end search)
-  "Split region each time SEARCH occurs between BEG and END.
-This can be thought of as an inverse to `mc/mark-all-in-region'."
-  (interactive "r\nsSplit on: ")
-  (let ((case-fold-search nil))
-    (if (string= search "")
-        (user-error "Empty search term")
-      (progn
-        (mc/remove-fake-cursors)
-        (goto-char beg)
-        (push-mark beg)
-        (while (search-forward search end t)
-          (save-excursion
-            (goto-char (match-beginning 0))
-            (mc/create-fake-cursor-at-point))
-          (push-mark (match-end 0)))
-        (unless (= (point) end)
-          (goto-char end))
-        (mc/maybe-multiple-cursors-mode)))))
 
-(defun trem-prev-window ()
-   (interactive)
-   (other-window -1))
+(defun xah-reformat-lines ( &optional @length)
+  "Reformat current text block or selection into short lines or 1 long line.
+When called for the first time, change to one long line. Second call change it to multiple short lines. Repeated call toggles.
+
+If `universal-argument' is called first, use the number value for min length of line. By default, it's 70.
+"
+  (interactive)
+  ;; This command symbol has a property “'is-longline-p”, the possible values are t and nil. This property is used to easily determine whether to compact or uncompact, when this command is called again
+  (let* (
+         (@length (if @length
+                      @length
+                    (if current-prefix-arg (prefix-numeric-value current-prefix-arg) fill-column )))
+         (is-longline-p
+          (if (eq last-command this-command)
+              (get this-command 'is-longline-p)
+            nil))
+         ($blanks-regex "\n[ \t]*\n")
+         $p1 $p2
+         )
+    (if (use-region-p)
+         (setq $p1 (region-beginning) $p2 (region-end))
+      (save-excursion
+        (if (re-search-backward $blanks-regex nil "move")
+            (progn (re-search-forward $blanks-regex)
+                   (setq $p1 (point)))
+          (setq $p1 (point)))
+        (if (re-search-forward $blanks-regex nil "move")
+            (progn (re-search-backward $blanks-regex)
+                   (setq $p2 (point)))
+          (setq $p2 (point)))))
+    (progn
+      (if current-prefix-arg
+          (xah-reformat-to-multi-lines $p1 $p2 @length)
+        (if is-longline-p
+            (xah-reformat-to-multi-lines $p1 $p2 @length)
+          (xah-reformat-whitespaces-to-one-space $p1 $p2)))
+      (put this-command 'is-longline-p (not is-longline-p)))))
+
+(defun xah-reformat-whitespaces-to-one-space (@begin @end)
+  "Replace whitespaces by one space."
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region @begin @end)
+      (goto-char (point-min))
+      (while
+          (search-forward "\n" nil "move")
+        (replace-match " "))
+      (goto-char (point-min))
+      (while
+          (search-forward "\t" nil "move")
+        (replace-match " "))
+      (goto-char (point-min))
+      (while
+          (re-search-forward "  +" nil "move")
+        (replace-match " ")))))
+
+(defun xah-space-to-newline ()
+  "Replace space sequence to a newline char.
+Works on current block or selection.
+
+URL `http://ergoemacs.org/emacs/emacs_space_to_newline.html'
+Version 2017-08-19"
+  (interactive)
+  (let* ( $p1 $p2 )
+    (if (use-region-p)
+        (setq $p1 (region-beginning) $p2 (region-end))
+      (save-excursion
+        (if (re-search-backward "\n[ \t]*\n" nil "move")
+            (progn (re-search-forward "\n[ \t]*\n")
+                   (setq $p1 (point)))
+          (setq $p1 (point)))
+        (re-search-forward "\n[ \t]*\n" nil "move")
+        (skip-chars-backward " \t\n" )
+        (setq $p2 (point))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (goto-char (point-min))
+        (while (re-search-forward " +" nil t)
+          (replace-match "\n" ))))))
+
+(defun xah-comment-dwim ()
+  "Like `comment-dwim', but toggle comment if cursor is not at end of line.
+
+URL `http://ergoemacs.org/emacs/emacs_toggle_comment_by_line.html'
+Version 2016-10-25"
+  (interactive)
+  (if (region-active-p)
+      (comment-dwim nil)
+    (let (($lbp (line-beginning-position))
+          ($lep (line-end-position)))
+      (if (eq $lbp $lep)
+          (progn
+            (comment-dwim nil))
+        (if (eq (point) $lep)
+            (progn
+              (comment-dwim nil))
+          (progn
+            (comment-or-uncomment-region $lbp $lep)
+            (forward-line )))))))
+
+(defun xah-append-to-register-1 ()
+  "Append current line or text selection to register 1.
+When no selection, append current line, with newline char.
+See also: `xah-paste-from-register-1', `copy-to-register'.
+
+URL `http://ergoemacs.org/emacs/emacs_copy_append.html'
+Version 2015-12-08 2020-09-08"
+  (interactive)
+  (let ($p1 $p2)
+    (if (use-region-p)
+         (setq $p1 (region-beginning) $p2 (region-end))
+      (setq $p1 (line-beginning-position) $p2 (line-end-position)))
+    (append-to-register ?1 $p1 $p2)
+    (with-temp-buffer (insert "\n")
+                      (append-to-register ?1 (point-min) (point-max)))
+    (message "Appended to register 1: 「%s」." (buffer-substring-no-properties $p1 $p2))))
+
+(defun xah-paste-from-register-1 ()
+  "Paste text from register 1.
+See also: `xah-copy-to-register-1', `insert-register'.
+URL `http://ergoemacs.org/emacs/elisp_copy-paste_register_1.html'
+Version 2015-12-08"
+  (interactive)
+  (when (use-region-p)
+    (delete-region (region-beginning) (region-end)))
+  (insert-register ?1 t))
+
 
 ;; <<< END UTILITIES >>>
-
 
 ;; <<< BEGIN BINDINGS >>>
 
@@ -794,21 +817,23 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
 
    (:mc-all t)
 
-   ;; movement keys (char/line)  
+   ;; movement keys  
    ("i" previous-line :norepeat t)
    ("j" backward-char :norepeat t)
    ("k" next-line     :norepeat t)
    ("l" forward-char  :norepeat t)
-
-
+   ("m" ) 
+   ;; TODO: navigate between pairs using "m", "."
+   ("SPC" (("g" nil :name "abort" :norepeat t)
+	   ("i" beginning-of-buffer :norepeat t)    
+	   ("k" end-of-buffer :norepeat t)
+	   ("j" beginning-of-line :norepeat t)
+	   ("l" end-of-line :norepeat t)))
    ;; object movement (with varying object type, u/o)
 
    
-   ;; recenter/focus, scrolling
-   ("f" recenter-top-bottom :norepeat t)
-   ("." trem-scroll-up :norepeat t)
-   ("," trem-scroll-down :norepeat t)
-
+   ;; recenter/focus, scrolling, hide under space
+   
    
    ;; most used, killing/yanking, undoing, repeating
    ("d" trem-d :norepeat t)
@@ -820,7 +845,7 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ("g" "C-g" :norepeat t) ;; universal quit
 
 
-   ;; editing, general text manipulation (no marking or selection) <TODO>
+   ;; editing, general text manipulation (no marking or selection)
    
    
    ;; execution
@@ -832,18 +857,19 @@ This can be thought of as an inverse to `mc/mark-all-in-region'."
    ;; marking
 
    
-   ;; numeric arguments
-   ("0" "M-0" :norepeat t)
-   ("1" "M-1" :norepeat t)
-   ("2" "M-2" :norepeat t)
-   ("3" "M-3" :norepeat t)
-   ("4" "M-4" :norepeat t)
-   ("5" "M-5" :norepeat t)
-   ("6" "M-6" :norepeat t)
-   ("7" "M-7" :norepeat t)
-   ("8" "M-8" :norepeat t)
-   ("9" "M-9" :norepeat t)
-   ("-" "M--" :norepeat t))
+   ;; numeric arguments, under space
+   ("SPC" (("0" "M-0" :norepeat t)
+	   ("1" "M-1" :norepeat t)
+	   ("2" "M-2" :norepeat t)
+	   ("3" "M-3" :norepeat t)
+	   ("4" "M-4" :norepeat t)
+	   ("5" "M-5" :norepeat t)
+	   ("6" "M-6" :norepeat t)
+	   ("7" "M-7" :norepeat t)
+	   ("8" "M-8" :norepeat t)
+	   ("9" "M-9" :norepeat t)
+	   ("-" "M--" :norepeat t)))
+   )
 
   ;; commands that repeated for each cursor
   (trem-modal-keys
