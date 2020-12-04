@@ -461,6 +461,12 @@ This function is meant to unbind keys set with `trem-modal-set-key'."
 
 ;; <<< BEGIN UTILITIES >>>
 
+(defun trem-goto-word-and-mark ()
+  "Invoke avy to go to word, maybe mark it."
+  (interactive)
+  (commmaybe-execute #'avy-goto-word-1)
+  (commmaybe-execute #'er/expand-region))
+
 (defun trem-select-block ()
   "Select the current/next block of text between blank lines.
 If region is active, extend selection downward by block."
@@ -728,6 +734,10 @@ Version 2016-10-25"
             (comment-or-uncomment-region $lbp $lep)
             (forward-line )))))))
 
+(defun trem-clear-register-1 ()
+  "Clear register 1.
+See also: `trem-paste-from-register-1', `copy-to-register'.
+
 (defun trem-append-to-register-1 ()
   "Append current line or text selection to register 1.
 When no selection, append current line, with newline char.
@@ -755,73 +765,73 @@ Version 2015-12-08"
     (delete-region (region-beginning) (region-end)))
   (insert-register ?1 t))
 
-(defvar xah-brackets nil "string of left/right brackets pairs.")
-(setq xah-brackets "()[]{}<>＜＞（）［］｛｝⦅⦆〚〛⦃⦄“”‘’‹›«»「」〈〉《》【】〔〕⦗⦘『』〖〗〘〙｢｣⟦⟧⟨⟩⟪⟫⟮⟯⟬⟭⌈⌉⌊⌋⦇⦈⦉⦊❛❜❝❞❨❩❪❫❴❵❬❭❮❯❰❱❲❳〈〉⦑⦒⧼⧽﹙﹚﹛﹜﹝﹞⁽⁾₍₎⦋⦌⦍⦎⦏⦐⁅⁆⸢⸣⸤⸥⟅⟆⦓⦔⦕⦖⸦⸧⸨⸩｟｠")
+(defvar trem-brackets nil "string of left/right brackets pairs.")
+(setq trem-brackets "()[]{}<>＜＞（）［］｛｝⦅⦆〚〛⦃⦄“”‘’‹›«»「」〈〉《》【】〔〕⦗⦘『』〖〗〘〙｢｣⟦⟧⟨⟩⟪⟫⟮⟯⟬⟭⌈⌉⌊⌋⦇⦈⦉⦊❛❜❝❞❨❩❪❫❴❵❬❭❮❯❰❱❲❳〈〉⦑⦒⧼⧽﹙﹚﹛﹜﹝﹞⁽⁾₍₎⦋⦌⦍⦎⦏⦐⁅⁆⸢⸣⸤⸥⟅⟆⦓⦔⦕⦖⸦⸧⸨⸩｟｠")
 
-(defvar xah-left-brackets '("\""  "(" "{" "[" "<" "〔" "【" "〖" "〈" "《" "「" "『" "“" "‘" "‹" "«" "〘")
+(defvar trem-left-brackets '("\""  "(" "{" "[" "<" "〔" "【" "〖" "〈" "《" "「" "『" "“" "‘" "‹" "«" "〘")
 
 
   "List of left bracket chars.")
 ;; (progn
-;; ;; make xah-left-brackets based on xah-brackets
-;;   (setq xah-left-brackets '())
-;;   (dotimes ($x (- (length xah-brackets) 1))
+;; ;; make trem-left-brackets based on trem-brackets
+;;   (setq trem-left-brackets '())
+;;   (dotimes ($x (- (length trem-brackets) 1))
 ;;     (when (= (% $x 2) 0)
-;;       (push (char-to-string (elt xah-brackets $x))
-;;             xah-left-brackets)))
-;;   (setq xah-left-brackets (reverse xah-left-brackets)))
+;;       (push (char-to-string (elt trem-brackets $x))
+;;             trem-left-brackets)))
+;;   (setq trem-left-brackets (reverse trem-left-brackets)))
 
-(defvar xah-right-brackets '("\"" ")" "]" "}" ">" "〕" "】" "〗" "〉" "》" "」" "』" "”" "’" "›" "»" "〙")
+(defvar trem-right-brackets '("\"" ")" "]" "}" ">" "〕" "】" "〗" "〉" "》" "」" "』" "”" "’" "›" "»" "〙")
   "list of right bracket chars.")
 ;; (progn
-;;   (setq xah-right-brackets '())
-;;   (dotimes ($x (- (length xah-brackets) 1))
+;;   (setq trem-right-brackets '())
+;;   (dotimes ($x (- (length trem-brackets) 1))
 ;;     (when (= (% $x 2) 1)
-;;       (push (char-to-string (elt xah-brackets $x))
-;;             xah-right-brackets)))
-;;   (setq xah-right-brackets (reverse xah-right-brackets)))
+;;       (push (char-to-string (elt trem-brackets $x))
+;;             trem-right-brackets)))
+;;   (setq trem-right-brackets (reverse trem-right-brackets)))
 
-(defvar xah-punctuation-regex nil "A regex string for the purpose of moving cursor to a punctuation.")
-(setq xah-punctuation-regex "[!\?\"\.,`'#$%&*+:;=@^|~]+")
+(defvar trem-punctuation-regex nil "A regex string for the purpose of moving cursor to a punctuation.")
+(setq trem-punctuation-regex "[!\?\"\.,`'#$%&*+:;=@^|~]+")
 
-(defun xah-forward-punct (&optional n)
+(defun trem-forward-punct (&optional n)
   "Move cursor to the next occurrence of punctuation.
-The list of punctuations to jump to is defined by `xah-punctuation-regex'
+The list of punctuations to jump to is defined by `trem-punctuation-regex'
 
 URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'
 Version 2017-06-26"
   (interactive "p")
-  (re-search-forward xah-punctuation-regex nil t n))
+  (re-search-forward trem-punctuation-regex nil t n))
 
-(defun xah-backward-punct (&optional n)
+(defun trem-backward-punct (&optional n)
   "Move cursor to the previous occurrence of punctuation.
-See `xah-forward-punct'
+See `trem-forward-punct'
 
 URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'
 Version 2017-06-26"
   (interactive "p")
-  (re-search-backward xah-punctuation-regex nil t n))
+  (re-search-backward trem-punctuation-regex nil t n))
 
-(defun xah-backward-left-bracket ()
+(defun trem-backward-left-bracket ()
   "Move cursor to the previous occurrence of left bracket.
-The list of brackets to jump to is defined by `xah-left-brackets'.
+The list of brackets to jump to is defined by `trem-left-brackets'.
 URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
 Version 2015-10-01"
   (interactive)
-  (re-search-backward (regexp-opt xah-left-brackets) nil t))
+  (re-search-backward (regexp-opt trem-left-brackets) nil t))
 
-(defun xah-forward-right-bracket ()
+(defun trem-forward-right-bracket ()
   "Move cursor to the next occurrence of right bracket.
-The list of brackets to jump to is defined by `xah-right-brackets'.
+The list of brackets to jump to is defined by `trem-right-brackets'.
 URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
 Version 2015-10-01"
   (interactive)
-  (re-search-forward (regexp-opt xah-right-brackets) nil t))
+  (re-search-forward (regexp-opt trem-right-brackets) nil t))
 
-(defun xah-goto-matching-bracket ()
+(defun trem-goto-matching-bracket ()
   "Move cursor to the matching bracket.
 If cursor is not on a bracket, call `backward-up-list'.
-The list of brackets to jump to is defined by `xah-left-brackets' and `xah-right-brackets'.
+The list of brackets to jump to is defined by `trem-left-brackets' and `trem-right-brackets'.
 URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
 Version 2016-11-22"
   (interactive)
@@ -830,11 +840,547 @@ Version 2016-11-22"
     (cond
      ((eq (char-after) ?\") (forward-sexp))
      ((eq (char-before) ?\") (backward-sexp ))
-     ((looking-at (regexp-opt xah-left-brackets))
+     ((looking-at (regexp-opt trem-left-brackets))
       (forward-sexp))
-     ((looking-back (regexp-opt xah-right-brackets) (max (- (point) 1) 1))
+     ((looking-back (regexp-opt trem-right-brackets) (max (- (point) 1) 1))
       (backward-sexp))
      (t (backward-up-list 1 'ESCAPE-STRINGS 'NO-SYNTAX-CROSSING)))))
+
+(defun trem-change-bracket-pairs ( @from-chars @to-chars)
+  "Change bracket pairs from one type to another.
+
+For example, change all parenthesis () to square brackets [].
+
+Works on selected text, or current text block.
+
+When called in lisp program, @from-chars or @to-chars is a string of bracket pair. eg \"(paren)\",  \"[bracket]\", etc.
+The first and last characters are used. (the middle is for convenience in ido selection.)
+If the string contains “,2”, then the first 2 chars and last 2 chars are used, for example  \"[[bracket,2]]\".
+If @to-chars is equal to string “none”, the brackets are deleted.
+
+URL `http://ergoemacs.org/emacs/elisp_change_brackets.html'
+Version 2020-11-01"
+  (interactive
+   (let (($bracketsList
+          '("(paren)"
+            "{brace}"
+            "[square]"
+            "<greater>"
+            "`emacs'"
+            "`markdown`"
+            "~tilde~"
+            "=equal="
+            "\"ascii quote\""
+            "[[double square,2]]"
+            "“curly quote”"
+            "‘single quote’"
+            "‹french angle›"
+            "«french double angle»"
+            "「corner」"
+            "『white corner』"
+            "【lenticular】"
+            "〖white lenticular〗"
+            "〈angle〉"
+            "《double angle》"
+            "〔tortoise〕"
+            "〘white tortoise〙"
+            "⦅white paren⦆"
+            "〚white square〛"
+            "⦃white curly⦄"
+            "〈pointing angle〉"
+            "⦑ANGLE WITH DOT⦒"
+            "⧼CURVED ANGLE⧽"
+            "⟦math square⟧"
+            "⟨math angle⟩"
+            "⟪math DOUBLE ANGLE⟫"
+            "⟮math FLATTENED PARENTHESIS⟯"
+            "⟬math WHITE TORTOISE SHELL⟭"
+            "❛HEAVY SINGLE QUOTATION MARK ORNAMENT❜"
+            "❝HEAVY DOUBLE TURNED COMMA QUOTATION MARK ORNAMENT❞"
+            "❨MEDIUM LEFT PARENTHESIS ORNAMENT❩"
+            "❪MEDIUM FLATTENED LEFT PARENTHESIS ORNAMENT❫"
+            "❴MEDIUM LEFT CURLY ORNAMENT❵"
+            "❬MEDIUM LEFT-POINTING ANGLE ORNAMENT❭"
+            "❮HEAVY LEFT-POINTING ANGLE QUOTATION MARK ORNAMENT❯"
+            "❰HEAVY LEFT-POINTING ANGLE ORNAMENT❱"
+            "none"
+            )))
+     (list
+      (ido-completing-read "Replace this:" $bracketsList )
+      (ido-completing-read "To:" $bracketsList ))))
+  (let ( $p1 $p2 )
+    (if (use-region-p)
+        (setq $p1 (region-beginning) $p2 (region-end))
+      (save-excursion
+        (if (re-search-backward "\n[ \t]*\n" nil "move")
+            (progn (re-search-forward "\n[ \t]*\n")
+                   (setq $p1 (point)))
+          (setq $p1 (point)))
+        (if (re-search-forward "\n[ \t]*\n" nil "move")
+            (progn (re-search-backward "\n[ \t]*\n")
+                   (setq $p2 (point)))
+          (setq $p2 (point)))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (let ( (case-fold-search nil)
+               $fromLeft
+               $fromRight
+               $toLeft
+               $toRight)
+          (cond
+           ((string-match ",2" @from-chars  )
+            (progn
+              (setq $fromLeft (substring @from-chars 0 2))
+              (setq $fromRight (substring @from-chars -2))))
+           (t
+            (progn
+              (setq $fromLeft (substring @from-chars 0 1))
+              (setq $fromRight (substring @from-chars -1)))))
+          (cond
+           ((string-match ",2" @to-chars)
+            (progn
+              (setq $toLeft (substring @to-chars 0 2))
+              (setq $toRight (substring @to-chars -2))))
+           ((string-match "none" @to-chars)
+            (progn
+              (setq $toLeft "")
+              (setq $toRight "")))
+           (t
+            (progn
+              (setq $toLeft (substring @to-chars 0 1))
+              (setq $toRight (substring @to-chars -1)))))
+          (cond
+           ((string-match "markdown" @from-chars)
+            (progn
+              (goto-char (point-min))
+              (while
+                  (re-search-forward "`\\([^`]+?\\)`" nil t)
+                (overlay-put (make-overlay (match-beginning 0) (match-end 0)) 'face 'highlight)
+                (replace-match (concat $toLeft "\\1" $toRight ) "FIXEDCASE" ))))
+           ((string-match "tilde" @from-chars)
+            (progn
+              (goto-char (point-min))
+              (while
+                  (re-search-forward "~\\([^~]+?\\)~" nil t)
+                (overlay-put (make-overlay (match-beginning 0) (match-end 0)) 'face 'highlight)
+                (replace-match (concat $toLeft "\\1" $toRight ) "FIXEDCASE" ))))
+           ((string-match "ascii quote" @from-chars)
+            (progn
+              (goto-char (point-min))
+              (while
+                  (re-search-forward "\"\\([^\"]+?\\)\"" nil t)
+                (overlay-put (make-overlay (match-beginning 0) (match-end 0)) 'face 'highlight)
+                (replace-match (concat $toLeft "\\1" $toRight ) "FIXEDCASE" ))))
+           ((string-match "equal" @from-chars)
+            (progn
+              (goto-char (point-min))
+              (while
+                  (re-search-forward "=\\([^=]+?\\)=" nil t)
+                (overlay-put (make-overlay (match-beginning 0) (match-end 0)) 'face 'highlight)
+                (replace-match (concat $toLeft "\\1" $toRight ) "FIXEDCASE" ))))
+           (t (progn
+                (progn
+                  (goto-char (point-min))
+                  (while (search-forward $fromLeft nil t)
+                    (overlay-put (make-overlay (match-beginning 0) (match-end 0)) 'face 'highlight)
+                    (replace-match $toLeft "FIXEDCASE" "LITERAL")))
+                (progn
+                  (goto-char (point-min))
+                  (while (search-forward $fromRight nil t)
+                    (overlay-put (make-overlay (match-beginning 0) (match-end 0)) 'face 'highlight)
+                    (replace-match $toRight "FIXEDCASE" "LITERAL")))))))))))
+
+
+(defun trem-delete-blank-lines ()
+  "Delete all newline around cursor.
+
+URL `http://ergoemacs.org/emacs/emacs_shrink_whitespace.html'
+Version 2018-04-02"
+  (interactive)
+  (let ($p3 $p4)
+          (skip-chars-backward "\n")
+          (setq $p3 (point))
+          (skip-chars-forward "\n")
+          (setq $p4 (point))
+          (delete-region $p3 $p4)))
+
+(defun trem-fly-delete-spaces ()
+  "Delete space, tab, IDEOGRAPHIC SPACE (U+3000) around cursor.
+Version 2019-06-13"
+  (interactive)
+  (let (p1 p2)
+    (skip-chars-forward " \t　")
+    (setq p2 (point))
+    (skip-chars-backward " \t　")
+    (setq p1 (point))
+    (delete-region p1 p2)))
+
+(defun trem-shrink-whitespaces ()
+  "Remove whitespaces around cursor to just one, or none.
+
+Shrink any neighboring space tab newline characters to 1 or none.
+If cursor neighbor has space/tab, toggle between 1 or 0 space.
+If cursor neighbor are newline, shrink them to just 1.
+If already has just 1 whitespace, delete it.
+
+URL `http://ergoemacs.org/emacs/emacs_shrink_whitespace.html'
+Version 2019-06-13"
+  (interactive)
+  (let* (
+         ($eol-count 0)
+         ($p0 (point))
+         $p1 ; whitespace begin
+         $p2 ; whitespace end
+         ($charBefore (char-before))
+         ($charAfter (char-after ))
+         ($space-neighbor-p (or (eq $charBefore 32) (eq $charBefore 9) (eq $charAfter 32) (eq $charAfter 9)))
+         $just-1-space-p
+         )
+    (skip-chars-backward " \n\t　")
+    (setq $p1 (point))
+    (goto-char $p0)
+    (skip-chars-forward " \n\t　")
+    (setq $p2 (point))
+    (goto-char $p1)
+    (while (search-forward "\n" $p2 t )
+      (setq $eol-count (1+ $eol-count)))
+    (setq $just-1-space-p (eq (- $p2 $p1) 1))
+    (goto-char $p0)
+    (cond
+     ((eq $eol-count 0)
+      (if $just-1-space-p
+          (trem-fly-delete-spaces)
+        (progn (trem-fly-delete-spaces)
+               (insert " ")))
+      )
+     ((eq $eol-count 1)
+      (if $space-neighbor-p
+          (trem-fly-delete-spaces)
+        (progn (trem-delete-blank-lines) (insert " "))))
+     ((eq $eol-count 2)
+      (if $space-neighbor-p
+          (trem-fly-delete-spaces)
+        (progn
+          (trem-delete-blank-lines)
+          (insert "\n"))))
+     ((> $eol-count 2)
+      (if $space-neighbor-p
+          (trem-fly-delete-spaces)
+        (progn
+          (goto-char $p2)
+          (search-backward "\n" )
+          (delete-region $p1 (point))
+          (insert "\n"))))
+     (t (progn
+          (message "nothing done. logic error 40873. shouldn't reach here" ))))))
+
+
+(defun trem-reformat-lines ( &optional @length)
+  "Reformat current text block or selection into short lines or 1 long line.
+
+When called for the first time, change to one long line. Second call change it to multiple short lines. Repeated call toggles.
+
+If `universal-argument' is called first, use the number value for min length of line. By default, it's 70.
+
+URL `http://ergoemacs.org/emacs/emacs_reformat_lines.html'
+Version 2020-11-14"
+  (interactive)
+  ;; This command symbol has a property “'is-longline-p”, the possible values are t and nil. This property is used to easily determine whether to compact or uncompact, when this command is called again
+  (let* (
+         (@length (if @length
+                      @length
+                    (if current-prefix-arg (prefix-numeric-value current-prefix-arg) fill-column )))
+         (is-longline-p
+          (if (eq last-command this-command)
+              (get this-command 'is-longline-p)
+            nil))
+         ($blanks-regex "\n[ \t]*\n")
+         $p1 $p2
+         )
+    (if (use-region-p)
+         (setq $p1 (region-beginning) $p2 (region-end))
+      (save-excursion
+        (if (re-search-backward $blanks-regex nil "move")
+            (progn (re-search-forward $blanks-regex)
+                   (setq $p1 (point)))
+          (setq $p1 (point)))
+        (if (re-search-forward $blanks-regex nil "move")
+            (progn (re-search-backward $blanks-regex)
+                   (setq $p2 (point)))
+          (setq $p2 (point)))))
+    (progn
+      (if current-prefix-arg
+          (trem-reformat-to-multi-lines $p1 $p2 @length)
+        (if is-longline-p
+            (trem-reformat-to-multi-lines $p1 $p2 @length)
+          (trem-reformat-whitespaces-to-one-space $p1 $p2)))
+      (put this-command 'is-longline-p (not is-longline-p)))))
+
+
+(defun trem-space-to-newline ()
+  "Replace space sequence to a newline char.
+Works on current block or selection.
+
+URL `http://ergoemacs.org/emacs/emacs_space_to_newline.html'
+Version 2017-08-19"
+  (interactive)
+  (let* ( $p1 $p2 )
+    (if (use-region-p)
+        (setq $p1 (region-beginning) $p2 (region-end))
+      (save-excursion
+        (if (re-search-backward "\n[ \t]*\n" nil "move")
+            (progn (re-search-forward "\n[ \t]*\n")
+                   (setq $p1 (point)))
+          (setq $p1 (point)))
+        (re-search-forward "\n[ \t]*\n" nil "move")
+        (skip-chars-backward " \t\n" )
+        (setq $p2 (point))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (goto-char (point-min))
+        (while (re-search-forward " +" nil t)
+          (replace-match "\n" ))))))
+
+(defun trem-insert-bracket-pair (@left-bracket @right-bracket &optional @wrap-method)
+  "Insert brackets around selection, word, at point, and maybe move cursor in between.
+
+ @left-bracket and @right-bracket are strings. @wrap-method must be either 'line or 'block. 'block means between empty lines.
+
+• if there's a region, add brackets around region.
+• If @wrap-method is 'line, wrap around line.
+• If @wrap-method is 'block, wrap around block.
+• if cursor is at beginning of line and its not empty line and contain at least 1 space, wrap around the line.
+• If cursor is at end of a word or buffer, one of the following will happen:
+ xyz▮ → xyz(▮)
+ xyz▮ → (xyz▮)       if in one of the lisp modes.
+• wrap brackets around word if any. e.g. xy▮z → (xyz▮). Or just (▮)
+
+URL `http://ergoemacs.org/emacs/elisp_insert_brackets_by_pair.html'
+Version 2017-01-17"
+  (if (use-region-p)
+      (progn ; there's active region
+        (let (
+              ($p1 (region-beginning))
+              ($p2 (region-end)))
+          (goto-char $p2)
+          (insert @right-bracket)
+          (goto-char $p1)
+          (insert @left-bracket)
+          (goto-char (+ $p2 2))))
+    (progn ; no text selection
+      (let ($p1 $p2)
+        (cond
+         ((eq @wrap-method 'line)
+          (setq $p1 (line-beginning-position) $p2 (line-end-position))
+          (goto-char $p2)
+          (insert @right-bracket)
+          (goto-char $p1)
+          (insert @left-bracket)
+          (goto-char (+ $p2 (length @left-bracket))))
+         ((eq @wrap-method 'block)
+          (save-excursion
+            (progn
+              (if (re-search-backward "\n[ \t]*\n" nil 'move)
+                  (progn (re-search-forward "\n[ \t]*\n")
+                         (setq $p1 (point)))
+                (setq $p1 (point)))
+              (if (re-search-forward "\n[ \t]*\n" nil 'move)
+                  (progn (re-search-backward "\n[ \t]*\n")
+                         (setq $p2 (point)))
+                (setq $p2 (point))))
+            (goto-char $p2)
+            (insert @right-bracket)
+            (goto-char $p1)
+            (insert @left-bracket)
+            (goto-char (+ $p2 (length @left-bracket)))))
+         ( ;  do line. line must contain space
+          (and
+           (eq (point) (line-beginning-position))
+           ;; (string-match " " (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+           (not (eq (line-beginning-position) (line-end-position))))
+          (insert @left-bracket )
+          (end-of-line)
+          (insert  @right-bracket))
+         ((and
+           (or ; cursor is at end of word or buffer. i.e. xyz▮
+            (looking-at "[^-_[:alnum:]]")
+            (eq (point) (point-max)))
+           (not (or
+                 (string-equal major-mode "trem-elisp-mode")
+                 (string-equal major-mode "emacs-lisp-mode")
+                 (string-equal major-mode "lisp-mode")
+                 (string-equal major-mode "lisp-interaction-mode")
+                 (string-equal major-mode "common-lisp-mode")
+                 (string-equal major-mode "clojure-mode")
+                 (string-equal major-mode "trem-clojure-mode")
+                 (string-equal major-mode "scheme-mode"))))
+          (progn
+            (setq $p1 (point) $p2 (point))
+            (insert @left-bracket @right-bracket)
+            (search-backward @right-bracket )))
+         (t (progn
+              ;; wrap around “word”. basically, want all alphanumeric, plus hyphen and underscore, but don't want space or punctuations. Also want chinese chars
+              ;; 我有一帘幽梦，不知与谁能共。多少秘密在其中，欲诉无人能懂。
+              (skip-chars-backward "-_[:alnum:]")
+              (setq $p1 (point))
+              (skip-chars-forward "-_[:alnum:]")
+              (setq $p2 (point))
+              (goto-char $p2)
+              (insert @right-bracket)
+              (goto-char $p1)
+              (insert @left-bracket)
+              (goto-char (+ $p2 (length @left-bracket))))))))))
+
+(defun trem-insert-paren () (interactive) (trem-insert-bracket-pair "(" ")") )
+(defun trem-insert-square-bracket () (interactive) (trem-insert-bracket-pair "[" "]") )
+(defun trem-insert-brace () (interactive) (trem-insert-bracket-pair "{" "}") )
+
+(defun trem-insert-double-curly-quote () (interactive) (trem-insert-bracket-pair "“" "”") )
+(defun trem-insert-curly-single-quote () (interactive) (trem-insert-bracket-pair "‘" "’") )
+(defun trem-insert-single-angle-quote () (interactive) (trem-insert-bracket-pair "‹" "›") )
+(defun trem-insert-double-angle-quote () (interactive) (trem-insert-bracket-pair "«" "»") )
+(defun trem-insert-ascii-double-quote () (interactive) (trem-insert-bracket-pair "\"" "\"") )
+(defun trem-insert-ascii-single-quote () (interactive) (trem-insert-bracket-pair "'" "'") )
+(defun trem-insert-emacs-quote () (interactive) (trem-insert-bracket-pair "`" "'") )
+(defun trem-insert-corner-bracket () (interactive) (trem-insert-bracket-pair "「" "」" ) )
+(defun trem-insert-white-corner-bracket () (interactive) (trem-insert-bracket-pair "『" "』") )
+(defun trem-insert-angle-bracket () (interactive) (trem-insert-bracket-pair "〈" "〉") )
+(defun trem-insert-double-angle-bracket () (interactive) (trem-insert-bracket-pair "《" "》") )
+(defun trem-insert-white-lenticular-bracket () (interactive) (trem-insert-bracket-pair "〖" "〗") )
+(defun trem-insert-black-lenticular-bracket () (interactive) (trem-insert-bracket-pair "【" "】") )
+(defun trem-insert-tortoise-shell-bracket () (interactive) (trem-insert-bracket-pair "〔" "〕" ) )
+
+(defvar trem-unicode-list nil "Associative list of Unicode symbols. First element is a Unicode character, second element is a string used as key shortcut in `ido-completing-read'")
+(setq trem-unicode-list
+      '(
+        ("_" . "underscore" )
+        ("•" . ".bullet" )
+        ("→" . "tn")
+        ("◇" . "3" )
+        ("◆" . "4" )
+        ("¤" . "2" )
+        ("…" . "...ellipsis" )
+        (" " . "nbsp" )
+        ("、" . "," )
+        ("⭑" . "9" )
+        ("🎶" . "5" )
+        ("—" . "-emdash" )
+        ("＆" . "7" )
+        ("↓" . "tt")
+        ("←" . "th")
+        ("↑" . "tc")
+        ("👍" . "tu")
+        ) )
+
+(defun trem-insert-unicode ()
+  "Insert a unicode"
+  (interactive)
+  (let (gotThis)
+    (setq gotThis
+          (ido-completing-read "insert:" (mapcar (lambda (x) (concat (car x) (cdr x))) trem-unicode-list)))
+    (insert (car (assoc (substring gotThis 0 1) trem-unicode-list)))))
+
+(defun trem-next-user-buffer ()
+  "Switch to the next user buffer.
+“user buffer” is determined by `trem-user-buffer-q'.
+URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
+Version 2016-06-19"
+  (interactive)
+  (next-buffer)
+  (let ((i 0))
+    (while (< i 20)
+      (if (not (trem-user-buffer-q))
+          (progn (next-buffer)
+                 (setq i (1+ i)))
+        (progn (setq i 100))))))
+
+(defun trem-previous-user-buffer ()
+  "Switch to the previous user buffer.
+“user buffer” is determined by `trem-user-buffer-q'.
+URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
+Version 2016-06-19"
+  (interactive)
+  (previous-buffer)
+  (let ((i 0))
+    (while (< i 20)
+      (if (not (trem-user-buffer-q))
+          (progn (previous-buffer)
+                 (setq i (1+ i)))
+        (progn (setq i 100))))))
+
+(defun trem-next-emacs-buffer ()
+  "Switch to the next emacs buffer.
+“emacs buffer” here is buffer whose name starts with *.
+URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
+Version 2016-06-19"
+  (interactive)
+  (next-buffer)
+  (let ((i 0))
+    (while (and (not (string-equal "*" (substring (buffer-name) 0 1))) (< i 20))
+      (setq i (1+ i)) (next-buffer))))
+
+(defun trem-previous-emacs-buffer ()
+  "Switch to the previous emacs buffer.
+“emacs buffer” here is buffer whose name starts with *.
+URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
+Version 2016-06-19"
+  (interactive)
+  (previous-buffer)
+  (let ((i 0))
+    (while (and (not (string-equal "*" (substring (buffer-name) 0 1))) (< i 20))
+      (setq i (1+ i)) (previous-buffer))))
+
+(defun trem-clean-empty-lines ()
+  "Replace repeated blank lines to just 1.
+Works on whole buffer or text selection, respects `narrow-to-region'.
+
+URL `http://ergoemacs.org/emacs/elisp_compact_empty_lines.html'
+Version 2017-09-22 2020-09-08"
+  (interactive)
+  (let ($begin $end)
+    (if (use-region-p)
+        (setq $begin (region-beginning) $end (region-end))
+      (setq $begin (point-min) $end (point-max)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $begin $end)
+        (progn
+          (goto-char (point-min))
+          (while (re-search-forward "\n\n\n+" nil "move")
+            (replace-match "\n\n")))))))
+
+(defun trem-clean-whitespace ()
+  "Delete trailing whitespace, and replace repeated blank lines to just 1.
+Only space and tab is considered whitespace here.
+Works on whole buffer or text selection, respects `narrow-to-region'.
+
+URL `http://ergoemacs.org/emacs/elisp_compact_empty_lines.html'
+Version 2017-09-22 2020-09-08"
+  (interactive)
+  (let ($begin $end)
+    (if (use-region-p)
+        (setq $begin (region-beginning) $end (region-end))
+      (setq $begin (point-min) $end (point-max)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $begin $end)
+        (progn
+          (goto-char (point-min))
+          (while (re-search-forward "[ \t]+\n" nil "move")
+            (replace-match "\n")))
+        (progn
+          (goto-char (point-min))
+          (while (re-search-forward "\n\n\n+" nil "move")
+            (replace-match "\n\n")))
+        (progn
+          (goto-char (point-max))
+          (while (equal (char-before) 32) ; char 32 is space
+            (delete-char -1))))
+      (message "white space cleaned"))))
+
+
 
 ;; <<< END UTILITIES >>>
 
@@ -857,16 +1403,24 @@ Version 2016-11-22"
    ("j" backward-char :norepeat t)
    ("k" next-line     :norepeat t)
    ("l" forward-char  :norepeat t)
-   ("m" nil)
-   ("." nil) 
-   ;; TODO: navigate between pairs using "m", "."
-   ("SPC" (("g" nil :name "abort" :norepeat t)
+   ("m" trem-backward-left-bracket :norepeat t)
+   ("." trem-forward-right-bracket :norepeat t)
+   ("," avy-goto-word-1 :norepeat t)
+
+   ;; alternative movement
+   ("SPC" (("g" "C-g" :name "abort" :norepeat t)
 	   ("i" beginning-of-buffer :norepeat t)    
 	   ("k" end-of-buffer :norepeat t)
 	   ("j" beginning-of-line :norepeat t)
 	   ("l" end-of-line :norepeat t)))
-   ;; object movement (with varying object type, u/o)
 
+   ;; fast marking
+   ("f" set-mark-command)
+   ("e" er/expand-region)
+   ("4" mark-whole-buffer)
+   ("5" mark-symbol :repeat t)
+   ("7" mark-line :repeat t)
+   ("8" mark-block :repeat t)
    
    ;; recenter/focus, scrolling, hide under space
    
@@ -882,19 +1436,12 @@ Version 2016-11-22"
 
 
    ;; editing, general text manipulation
+   ("z" comment-region)
+   ("SPC" (("z" uncomment-region)
+	   ("d" kill-region :exit t)
+	   ("p" trem-replace-selection)))
    
-   ("SPC" (("z" uncomment-region-function)))
-   
-   ;; execution
-
-
-   ;; navigation
-   
-
-   ;; marking
-
-   
-     
+   ;; execution     
    )
 
   ;; commands that repeated for each cursor
