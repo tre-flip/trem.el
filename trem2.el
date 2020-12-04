@@ -15,17 +15,9 @@
 (require 'seq)
 (require 'avy)
 (require 'subr-x)
-(require 'smartparens)
 (require 'expand-region)
 (require 'the-org-mode-expansions)
 (require 'multiple-cursors)
-
-;; <<< BEGIN GLOBALS >>>
-
-(defvar trem-marking-flag nil)
-
-;; <<< END GLOBALS >>>
-
 
 ;; <<< BEGIN MODAL >>>
 
@@ -482,42 +474,6 @@ If region is active, extend selection downward by block."
       (push-mark (point) t t)
       (re-search-forward "\n[ \t]*\n" nil "move"))))
 
-(defun trem-forward-word-maybe-mark ()
-  "Go one word forward maybe mark it."
-  (interactive)
-  (forward-word)
-  (when trem-marking-flag
-      (forward-char)
-      (er/mark-word)))
-
-(defun trem-backward-word-maybe-mark ()
-  "Go one word backward maybe mark it."
-  (interactive)
-  (backward-word)
-  (when trem-marking-flag
-    (er/mark-word)))
-
-(defun trem-goto-word-maybe-mark ()
-  "Invoke avy to go to word, maybe mark it."
-  (interactive)
-  (commmaybe-execute #'avy-goto-word-1)
-  (when trem-marking-flag
-    (commmaybe-execute #'er/expand-region)))
-
-(defun trem-forward-symbol-maybe-mark ()
-  "Go one word forward maybe mark it."
-  (interactive)
-  (forward-symbol 2)
-  (when trem-marking-flag
-    (er/mark-symbol)))
-
-(defun trem-backward-symbol-maybe-mark ()
-  "Go one word backward maybe mark it."
-  (interactive)
-  (forward-symbol -1)
-  (when trem-marking-flag
-    (er/mark-symbol)))
-
 (defun trem-mark-line ()
   "Select current line, or select next line if called again."
   (interactive)
@@ -799,10 +755,86 @@ Version 2015-12-08"
     (delete-region (region-beginning) (region-end)))
   (insert-register ?1 t))
 
-(defun trem-next-delimiter ()
-  "Go to the next delimiter"
+(defvar xah-brackets nil "string of left/right brackets pairs.")
+(setq xah-brackets "()[]{}<>＜＞（）［］｛｝⦅⦆〚〛⦃⦄“”‘’‹›«»「」〈〉《》【】〔〕⦗⦘『』〖〗〘〙｢｣⟦⟧⟨⟩⟪⟫⟮⟯⟬⟭⌈⌉⌊⌋⦇⦈⦉⦊❛❜❝❞❨❩❪❫❴❵❬❭❮❯❰❱❲❳〈〉⦑⦒⧼⧽﹙﹚﹛﹜﹝﹞⁽⁾₍₎⦋⦌⦍⦎⦏⦐⁅⁆⸢⸣⸤⸥⟅⟆⦓⦔⦕⦖⸦⸧⸨⸩｟｠")
+
+(defvar xah-left-brackets '("\""  "(" "{" "[" "<" "〔" "【" "〖" "〈" "《" "「" "『" "“" "‘" "‹" "«" "〘")
+
+
+  "List of left bracket chars.")
+;; (progn
+;; ;; make xah-left-brackets based on xah-brackets
+;;   (setq xah-left-brackets '())
+;;   (dotimes ($x (- (length xah-brackets) 1))
+;;     (when (= (% $x 2) 0)
+;;       (push (char-to-string (elt xah-brackets $x))
+;;             xah-left-brackets)))
+;;   (setq xah-left-brackets (reverse xah-left-brackets)))
+
+(defvar xah-right-brackets '("\"" ")" "]" "}" ">" "〕" "】" "〗" "〉" "》" "」" "』" "”" "’" "›" "»" "〙")
+  "list of right bracket chars.")
+;; (progn
+;;   (setq xah-right-brackets '())
+;;   (dotimes ($x (- (length xah-brackets) 1))
+;;     (when (= (% $x 2) 1)
+;;       (push (char-to-string (elt xah-brackets $x))
+;;             xah-right-brackets)))
+;;   (setq xah-right-brackets (reverse xah-right-brackets)))
+
+(defvar xah-punctuation-regex nil "A regex string for the purpose of moving cursor to a punctuation.")
+(setq xah-punctuation-regex "[!\?\"\.,`'#$%&*+:;=@^|~]+")
+
+(defun xah-forward-punct (&optional n)
+  "Move cursor to the next occurrence of punctuation.
+The list of punctuations to jump to is defined by `xah-punctuation-regex'
+
+URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'
+Version 2017-06-26"
+  (interactive "p")
+  (re-search-forward xah-punctuation-regex nil t n))
+
+(defun xah-backward-punct (&optional n)
+  "Move cursor to the previous occurrence of punctuation.
+See `xah-forward-punct'
+
+URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'
+Version 2017-06-26"
+  (interactive "p")
+  (re-search-backward xah-punctuation-regex nil t n))
+
+(defun xah-backward-left-bracket ()
+  "Move cursor to the previous occurrence of left bracket.
+The list of brackets to jump to is defined by `xah-left-brackets'.
+URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
+Version 2015-10-01"
   (interactive)
-  (re-search-forward "[\s(]" nil "move"))
+  (re-search-backward (regexp-opt xah-left-brackets) nil t))
+
+(defun xah-forward-right-bracket ()
+  "Move cursor to the next occurrence of right bracket.
+The list of brackets to jump to is defined by `xah-right-brackets'.
+URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
+Version 2015-10-01"
+  (interactive)
+  (re-search-forward (regexp-opt xah-right-brackets) nil t))
+
+(defun xah-goto-matching-bracket ()
+  "Move cursor to the matching bracket.
+If cursor is not on a bracket, call `backward-up-list'.
+The list of brackets to jump to is defined by `xah-left-brackets' and `xah-right-brackets'.
+URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
+Version 2016-11-22"
+  (interactive)
+  (if (nth 3 (syntax-ppss))
+      (backward-up-list 1 'ESCAPE-STRINGS 'NO-SYNTAX-CROSSING)
+    (cond
+     ((eq (char-after) ?\") (forward-sexp))
+     ((eq (char-before) ?\") (backward-sexp ))
+     ((looking-at (regexp-opt xah-left-brackets))
+      (forward-sexp))
+     ((looking-back (regexp-opt xah-right-brackets) (max (- (point) 1) 1))
+      (backward-sexp))
+     (t (backward-up-list 1 'ESCAPE-STRINGS 'NO-SYNTAX-CROSSING)))))
 
 ;; <<< END UTILITIES >>>
 
@@ -849,11 +881,12 @@ Version 2015-12-08"
    ("g" "C-g" :norepeat t) ;; universal quit
 
 
-   ;; editing, general text manipulation (no marking or selection)
+   ;; editing, general text manipulation
    
+   ("SPC" (("z" uncomment-region-function)))
    
    ;; execution
-   
+
 
    ;; navigation
    
@@ -861,18 +894,7 @@ Version 2015-12-08"
    ;; marking
 
    
-   ;; numeric arguments, under space
-   ("SPC" (("0" "M-0" :norepeat t)
-	   ("1" "M-1" :norepeat t)
-	   ("2" "M-2" :norepeat t)
-	   ("3" "M-3" :norepeat t)
-	   ("4" "M-4" :norepeat t)
-	   ("5" "M-5" :norepeat t)
-	   ("6" "M-6" :norepeat t)
-	   ("7" "M-7" :norepeat t)
-	   ("8" "M-8" :norepeat t)
-	   ("9" "M-9" :norepeat t)
-	   ("-" "M--" :norepeat t)))
+     
    )
 
   ;; commands that repeated for each cursor
