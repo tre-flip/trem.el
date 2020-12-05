@@ -7,7 +7,7 @@
 ;; MIT License
 
 ;;; Commentary:
-;; Read the source. Based on kakoune.el, xah-fly-keys, ryo-modal.
+;; Read the source. Based on kakoune.el, trem-fly-keys, ryo-modal.
 
 ;;; Code:
 (require 'cl-lib)
@@ -1040,13 +1040,8 @@ Version 2019-06-13"
 
 (defun trem-reformat-lines ( &optional @length)
   "Reformat current text block or selection into short lines or 1 long line.
-
 When called for the first time, change to one long line. Second call change it to multiple short lines. Repeated call toggles.
-
-If `universal-argument' is called first, use the number value for min length of line. By default, it's 70.
-
-URL `http://ergoemacs.org/emacs/emacs_reformat_lines.html'
-Version 2020-11-14"
+If `universal-argument' is called first, use the number value for min length of line. By default, it's 70."
   (interactive)
   ;; This command symbol has a property “'is-longline-p”, the possible values are t and nil. This property is used to easily determine whether to compact or uncompact, when this command is called again
   (let* (
@@ -1082,10 +1077,7 @@ Version 2020-11-14"
 
 (defun trem-space-to-newline ()
   "Replace space sequence to a newline char.
-Works on current block or selection.
-
-URL `http://ergoemacs.org/emacs/emacs_space_to_newline.html'
-Version 2017-08-19"
+Works on current block or selection."
   (interactive)
   (let* ( $p1 $p2 )
     (if (use-region-p)
@@ -1105,12 +1097,22 @@ Version 2017-08-19"
         (while (re-search-forward " +" nil t)
           (replace-match "\n" ))))))
 
+(defun trem-user-buffer-q ()
+  "Return t if current buffer is a user buffer, else nil.
+Typically, if buffer name starts with *, it's not considered a user buffer.
+This function is used by buffer switching command and close buffer command, so that next buffer shown is a user buffer.
+You can override this function to get your idea of “user buffer”.
+Version 2016-06-18"
+  (interactive)
+  (cond
+   ((string-equal "*" (substring (buffer-name) 0 1)) nil)
+   ((string-equal major-mode "dired-mode") nil)
+   ((string-equal major-mode "eww-mode") nil)
+   (t t)))
 
 (defun trem-next-user-buffer ()
   "Switch to the next user buffer.
-“user buffer” is determined by `trem-user-buffer-q'.
-URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
-Version 2016-06-19"
+“user buffer” is determined by `trem-user-buffer-q'."
   (interactive)
   (next-buffer)
   (let ((i 0))
@@ -1122,9 +1124,7 @@ Version 2016-06-19"
 
 (defun trem-previous-user-buffer ()
   "Switch to the previous user buffer.
-“user buffer” is determined by `trem-user-buffer-q'.
-URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
-Version 2016-06-19"
+“user buffer” is determined by `trem-user-buffer-q'."
   (interactive)
   (previous-buffer)
   (let ((i 0))
@@ -1136,9 +1136,7 @@ Version 2016-06-19"
 
 (defun trem-next-emacs-buffer ()
   "Switch to the next emacs buffer.
-“emacs buffer” here is buffer whose name starts with *.
-URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
-Version 2016-06-19"
+“emacs buffer” here is buffer whose name starts with *."
   (interactive)
   (next-buffer)
   (let ((i 0))
@@ -1147,9 +1145,7 @@ Version 2016-06-19"
 
 (defun trem-previous-emacs-buffer ()
   "Switch to the previous emacs buffer.
-“emacs buffer” here is buffer whose name starts with *.
-URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
-Version 2016-06-19"
+“emacs buffer” here is buffer whose name starts with *."
   (interactive)
   (previous-buffer)
   (let ((i 0))
@@ -1158,10 +1154,7 @@ Version 2016-06-19"
 
 (defun trem-clean-empty-lines ()
   "Replace repeated blank lines to just 1.
-Works on whole buffer or text selection, respects `narrow-to-region'.
-
-URL `http://ergoemacs.org/emacs/elisp_compact_empty_lines.html'
-Version 2017-09-22 2020-09-08"
+Works on whole buffer or text selection, respects `narrow-to-region'."
   (interactive)
   (let ($begin $end)
     (if (use-region-p)
@@ -1178,10 +1171,7 @@ Version 2017-09-22 2020-09-08"
 (defun trem-clean-whitespace ()
   "Delete trailing whitespace, and replace repeated blank lines to just 1.
 Only space and tab is considered whitespace here.
-Works on whole buffer or text selection, respects `narrow-to-region'.
-
-URL `http://ergoemacs.org/emacs/elisp_compact_empty_lines.html'
-Version 2017-09-22 2020-09-08"
+Works on whole buffer or text selection, respects `narrow-to-region'."
   (interactive)
   (let ($begin $end)
     (if (use-region-p)
@@ -1204,11 +1194,11 @@ Version 2017-09-22 2020-09-08"
             (delete-char -1))))
       (message "white space cleaned"))))
 
-(defun trem-delete-forward-bracket-text ()
+(defun trem-kill-forward-bracket-text ()
   (interactive)
   (backward-kill-sexp -1))
 
-(defun trem-delete-backward-bracket-text ()
+(defun trem-kill-backward-bracket-text ()
   (interactive)
   (backward-kill-sexp))
 
@@ -1216,10 +1206,8 @@ Version 2017-09-22 2020-09-08"
   "Kill selected text or char backward or bracket pair."
   (interactive)
   (if (use-region-p)
-	(kill-region (region-beginning) (region-end))
-    (if (looking-back "\\s\"" 1)
-	(trem-delete-backward-bracket-pair)
-	(delete-char -1))))
+      (kill-region (region-beginning) (region-end))
+    (delete-char -1)))
 
 (defun trem-kill-forward ()
   "Kill selected text or char forward or bracket pair."
@@ -1228,6 +1216,36 @@ Version 2017-09-22 2020-09-08"
 	(kill-region (region-beginning) (region-end))
     (delete-char 1)))
 
+(defun trem-beginning-of-line-or-block ()
+  "Move cursor to beginning of line or previous paragraph.
+• When called first time, move cursor to beginning of char in current line. (if already, move to beginning of line.)
+• When called again, move cursor backward by jumping over any sequence of whitespaces containing 2 blank lines.
+"
+  (interactive)
+  (let (($p (point)))
+    (if (or (equal (point) (line-beginning-position))
+            (eq last-command this-command))
+        (if (re-search-backward "\n[\t\n ]*\n+" nil "move")
+            (progn
+              (skip-chars-backward "\n\t ")
+              ;; (forward-char )
+              )
+          (goto-char (point-min)))
+      (progn
+        (back-to-indentation)
+        (when (eq $p (point))
+          (beginning-of-line))))))
+
+(defun trem-end-of-line-or-block ()
+  "Move cursor to end of line or next paragraph.
+• When called first time, move cursor to end of line.
+• When called again, move cursor forward by jumping over any sequence of whitespaces containing 2 blank lines."
+  (interactive)
+  (if (or (equal (point) (line-end-position))
+          (eq last-command this-command))
+      (progn
+        (re-search-forward "\n[\t\n ]*\n+" nil "move" ))
+    (end-of-line)))
 
 ;; <<< END UTILITIES >>>
 
@@ -1245,42 +1263,57 @@ Version 2017-09-22 2020-09-08"
 
    (:mc-all t)
 
+   ;; quit
+   ("g" "C-g" :norepeat t)
+   ("SPC g" "C-g" :name "abort" :norepeat t)
+
+   
    ;; movement keys  
    ("i" previous-line :norepeat t)
    ("j" backward-char :norepeat t)
    ("k" next-line     :norepeat t)
    ("l" forward-char  :norepeat t)
+
    ("m" trem-backward-left-bracket :norepeat t)
    ("." trem-forward-right-bracket :norepeat t)
    ("," avy-goto-word-1 :norepeat t)
+
    ("u" backward-word :norepeat t)
    ("o" forward-word :norepeat t)
-   ;; alternative movement
-   ("SPC" (("g" "C-g" :name "abort" :norepeat t)
-	   ("i" beginning-of-buffer :norepeat t)    
-	   ("k" end-of-buffer :norepeat t)
-	   ("j" beginning-of-line :norepeat t)
-	   ("l" end-of-line :norepeat t)))
 
+   ("h" trem-beginning-of-line-or-block)
+   (";" trem-end-of-line-or-block)
+   
+   ;; alternative movement
+   ("SPC" (("i" beginning-of-buffer :norepeat t)    
+	   ("k" end-of-buffer :norepeat t)))
+    
+     
    ;; fast marking
    ("d" trem-toggle-mark :norepeat t)
-   ("e" er/expand-region)
-   ("4" mark-whole-buffer)
+   ("e" er/expand-region :norepeat t)
    ("7" trem-mark-line :norepeat t)
    ("8" trem-mark-block :norepeat t)
+   ("9" mark-whole-buffer :norepeat t)
    
-   ;; recenter/focus, scrolling, hide under space
+  
+   ;; recenter/focus, scrolling
+   ("a" recenter-top-bottom :norepeat t)
    
-   
-   ;; most used, killing/yanking, undoing, repeating
+
+   ;; fast text edit 
    ("f" trem-kill-forward :norepeat t)
    ("s" trem-kill-backward :norepeat t)
+
+   ("w" trem-kill-backward-bracket-text :norepeat t)
+   ("r" trem-kill-forward-bracket-text  :norepeat t)
+
    ("c" kill-ring-save :norepeat t)
    ("v" yank :norepeat t)
    ("SPC v" yank-pop)
    ("t" undo :norepeat t)
-   ("r" trem-modal-repeat :norepeat t)
-   ("g" "C-g" :norepeat t) ;; universal quit
+   ("y" trem-modal-repeat :norepeat t)
+   
 
    ;; editing, general text manipulation
    ("z" comment-region)
@@ -1288,12 +1321,20 @@ Version 2017-09-22 2020-09-08"
 	   ("d" kill-region :exit t)
 	   ("p" trem-replace-selection)))
    
-   ;; execution     
+
+   ;; execution
+   ("x" execute-extended-command)
    )
 
   ;; commands that repeated for each cursor
   (trem-modal-keys
-   ))
+   (:mc-all 0)
+   ;; fast window management
+   ("2" delete-window)
+   ("3" other-window :norepeat t)
+   ("4" split-window-right :norepeat t)
+   ("5" split-window-below :norepeat t)
+   ("6" delete-other-windows :norepeat t)))
 
 
 ;; <<< END BINDINGS >>>
