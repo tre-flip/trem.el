@@ -1247,6 +1247,9 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
         (re-search-forward "\n[\t\n ]*\n+" nil "move" ))
     (end-of-line)))
 
+(defun trem-insert-space ()
+  (interactive)
+  (insert " "))
 ;; <<< END UTILITIES >>>
 
 ;; <<< BEGIN BINDINGS >>>
@@ -1319,23 +1322,44 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
 
    ;; editing, general text manipulation
    ("z" comment-region)
-   ("SPC" (("z" uncomment-region)
-	   ))
+   ("SPC z" uncomment-region)
    
 
-   ;; execution
+   ;; fast execution
    ("x" execute-extended-command)
-   )
+   ("b" eshell)
+   
+   ;; slow execution
+   ("SPC" (("x" (("s" trem-shell-pipe)
+		 ("b" eval-buffer)
+		 ("r" eval-region)))))
+   
 
-  ;; commands that repeated for each cursor
+   ;; unused keys are blocked
+   ("p" nil :norepeat t)
+   ("q" nil :norepeat t))
+
+  ;; commands that aren't repeated for each cursor
   (trem-modal-keys
    (:mc-all 0)
+   
    ;; fast window management
    ("2" delete-window)
    ("3" other-window :norepeat t)
    ("4" split-window-right :norepeat t)
    ("5" split-window-below :norepeat t)
-   ("6" delete-other-windows :norepeat t)))
+   ("6" delete-other-windows :norepeat t)
+
+   ;; fast buffer management
+   ("n" trem-next-user-buffer :norepeat t)
+   
+   ;; slow buffer and file management
+   ("SPC" (("f" (("o" find-file)
+		 ("d" dired)
+		 ("s" save-buffer)
+		 ("j" save-some-buffers))
+	    :name "file/buffer")))
+   ))
 
 
 ;; <<< END BINDINGS >>>
