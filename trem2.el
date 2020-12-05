@@ -7,7 +7,7 @@
 ;; MIT License
 
 ;;; Commentary:
-;; Read the source. Based on kakoune.el.
+;; Read the source. Based on kakoune.el, xah-fly-keys, ryo-modal.
 
 ;;; Code:
 (require 'cl-lib)
@@ -516,16 +516,7 @@ If region is active, extend selection downward by block."
   (interactive "p")
   (forward-same-syntax (- count)))
 
-(defun trem-d (count)
-  "Kill selected text or COUNT chars."
-  (interactive "p")
-  (if (equal smartparens-strict-mode t)
-      (if (use-region-p)
-	  (sp-kill-region (region-beginning) (region-end))
-	(sp-delete-char count))
-    (if (use-region-p)
-	(kill-region (region-beginning) (region-end))
-      (delete-char count t)))) 
+ 
 
 (defun trem-replace-selection ()
   "Replace selection with killed text."
@@ -713,26 +704,6 @@ Version 2017-08-19"
         (goto-char (point-min))
         (while (re-search-forward " +" nil t)
           (replace-match "\n" ))))))
-
-(defun trem-comment-dwim ()
-  "Like `comment-dwim', but toggle comment if cursor is not at end of line.
-
-URL `http://ergoemacs.org/emacs/emacs_toggle_comment_by_line.html'
-Version 2016-10-25"
-  (interactive)
-  (if (region-active-p)
-      (comment-dwim nil)
-    (let (($lbp (line-beginning-position))
-          ($lep (line-end-position)))
-      (if (eq $lbp $lep)
-          (progn
-            (comment-dwim nil))
-        (if (eq (point) $lep)
-            (progn
-              (comment-dwim nil))
-          (progn
-            (comment-or-uncomment-region $lbp $lep)
-            (forward-line )))))))
 
 (defun trem-clear-register-1 ()
   "Clear register 1.
@@ -1143,114 +1114,6 @@ Version 2017-08-19"
         (while (re-search-forward " +" nil t)
           (replace-match "\n" ))))))
 
-(defun trem-insert-bracket-pair (@left-bracket @right-bracket &optional @wrap-method)
-  "Insert brackets around selection, word, at point, and maybe move cursor in between.
-
- @left-bracket and @right-bracket are strings. @wrap-method must be either 'line or 'block. 'block means between empty lines.
-
-• if there's a region, add brackets around region.
-• If @wrap-method is 'line, wrap around line.
-• If @wrap-method is 'block, wrap around block.
-• if cursor is at beginning of line and its not empty line and contain at least 1 space, wrap around the line.
-• If cursor is at end of a word or buffer, one of the following will happen:
- xyz▮ → xyz(▮)
- xyz▮ → (xyz▮)       if in one of the lisp modes.
-• wrap brackets around word if any. e.g. xy▮z → (xyz▮). Or just (▮)
-
-URL `http://ergoemacs.org/emacs/elisp_insert_brackets_by_pair.html'
-Version 2017-01-17"
-  (if (use-region-p)
-      (progn ; there's active region
-        (let (
-              ($p1 (region-beginning))
-              ($p2 (region-end)))
-          (goto-char $p2)
-          (insert @right-bracket)
-          (goto-char $p1)
-          (insert @left-bracket)
-          (goto-char (+ $p2 2))))
-    (progn ; no text selection
-      (let ($p1 $p2)
-        (cond
-         ((eq @wrap-method 'line)
-          (setq $p1 (line-beginning-position) $p2 (line-end-position))
-          (goto-char $p2)
-          (insert @right-bracket)
-          (goto-char $p1)
-          (insert @left-bracket)
-          (goto-char (+ $p2 (length @left-bracket))))
-         ((eq @wrap-method 'block)
-          (save-excursion
-            (progn
-              (if (re-search-backward "\n[ \t]*\n" nil 'move)
-                  (progn (re-search-forward "\n[ \t]*\n")
-                         (setq $p1 (point)))
-                (setq $p1 (point)))
-              (if (re-search-forward "\n[ \t]*\n" nil 'move)
-                  (progn (re-search-backward "\n[ \t]*\n")
-                         (setq $p2 (point)))
-                (setq $p2 (point))))
-            (goto-char $p2)
-            (insert @right-bracket)
-            (goto-char $p1)
-            (insert @left-bracket)
-            (goto-char (+ $p2 (length @left-bracket)))))
-         ( ;  do line. line must contain space
-          (and
-           (eq (point) (line-beginning-position))
-           ;; (string-match " " (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
-           (not (eq (line-beginning-position) (line-end-position))))
-          (insert @left-bracket )
-          (end-of-line)
-          (insert  @right-bracket))
-         ((and
-           (or ; cursor is at end of word or buffer. i.e. xyz▮
-            (looking-at "[^-_[:alnum:]]")
-            (eq (point) (point-max)))
-           (not (or
-                 (string-equal major-mode "trem-elisp-mode")
-                 (string-equal major-mode "emacs-lisp-mode")
-                 (string-equal major-mode "lisp-mode")
-                 (string-equal major-mode "lisp-interaction-mode")
-                 (string-equal major-mode "common-lisp-mode")
-                 (string-equal major-mode "clojure-mode")
-                 (string-equal major-mode "trem-clojure-mode")
-                 (string-equal major-mode "scheme-mode"))))
-          (progn
-            (setq $p1 (point) $p2 (point))
-            (insert @left-bracket @right-bracket)
-            (search-backward @right-bracket )))
-         (t (progn
-              ;; wrap around “word”. basically, want all alphanumeric, plus hyphen and underscore, but don't want space or punctuations. Also want chinese chars
-              ;; 我有一帘幽梦，不知与谁能共。多少秘密在其中，欲诉无人能懂。
-              (skip-chars-backward "-_[:alnum:]")
-              (setq $p1 (point))
-              (skip-chars-forward "-_[:alnum:]")
-              (setq $p2 (point))
-              (goto-char $p2)
-              (insert @right-bracket)
-              (goto-char $p1)
-              (insert @left-bracket)
-              (goto-char (+ $p2 (length @left-bracket))))))))))
-
-(defun trem-insert-paren () (interactive) (trem-insert-bracket-pair "(" ")") )
-(defun trem-insert-square-bracket () (interactive) (trem-insert-bracket-pair "[" "]") )
-(defun trem-insert-brace () (interactive) (trem-insert-bracket-pair "{" "}") )
-
-(defun trem-insert-double-curly-quote () (interactive) (trem-insert-bracket-pair "“" "”") )
-(defun trem-insert-curly-single-quote () (interactive) (trem-insert-bracket-pair "‘" "’") )
-(defun trem-insert-single-angle-quote () (interactive) (trem-insert-bracket-pair "‹" "›") )
-(defun trem-insert-double-angle-quote () (interactive) (trem-insert-bracket-pair "«" "»") )
-(defun trem-insert-ascii-double-quote () (interactive) (trem-insert-bracket-pair "\"" "\"") )
-(defun trem-insert-ascii-single-quote () (interactive) (trem-insert-bracket-pair "'" "'") )
-(defun trem-insert-emacs-quote () (interactive) (trem-insert-bracket-pair "`" "'") )
-(defun trem-insert-corner-bracket () (interactive) (trem-insert-bracket-pair "「" "」" ) )
-(defun trem-insert-white-corner-bracket () (interactive) (trem-insert-bracket-pair "『" "』") )
-(defun trem-insert-angle-bracket () (interactive) (trem-insert-bracket-pair "〈" "〉") )
-(defun trem-insert-double-angle-bracket () (interactive) (trem-insert-bracket-pair "《" "》") )
-(defun trem-insert-white-lenticular-bracket () (interactive) (trem-insert-bracket-pair "〖" "〗") )
-(defun trem-insert-black-lenticular-bracket () (interactive) (trem-insert-bracket-pair "【" "】") )
-(defun trem-insert-tortoise-shell-bracket () (interactive) (trem-insert-bracket-pair "〔" "〕" ) )
 
 (defvar trem-unicode-list nil "Associative list of Unicode symbols. First element is a Unicode character, second element is a string used as key shortcut in `ido-completing-read'")
 (setq trem-unicode-list
@@ -1380,7 +1243,115 @@ Version 2017-09-22 2020-09-08"
             (delete-char -1))))
       (message "white space cleaned"))))
 
+(defun trem-delete-backward-char-or-bracket-text ()
+  "Delete backward 1 character, but if it's a \"quote\" or bracket ()[]{}【】「」 etc, delete bracket and the inner text, push the deleted text to `kill-ring'.
 
+What char is considered bracket or quote is determined by current syntax table.
+
+If `universal-argument' is called first, do not delete inner text.
+
+URL `http://cs.org/emacs/emacs_delete_backward_char_or_bracket_text.html'
+Version 2017-07-02"
+  (interactive)
+  (if (and delete-selection-mode (region-active-p))
+      (delete-region (region-beginning) (region-end))
+    (cond
+     ((looking-back "\\s)" 1)
+      (if current-prefix-arg
+          (trem-delete-backward-bracket-pair)
+        (trem-delete-backward-bracket-text)))
+     ((looking-back "\\s(" 1)
+      (progn
+        (backward-char)
+        (forward-sexp)
+        (if current-prefix-arg
+            (trem-delete-backward-bracket-pair)
+          (trem-delete-backward-bracket-text))))
+     ((looking-back "\\s\"" 1)
+      (if (nth 3 (syntax-ppss))
+          (progn
+            (backward-char )
+            (trem-delete-forward-bracket-pairs (not current-prefix-arg)))
+        (if current-prefix-arg
+            (trem-delete-backward-bracket-pair)
+          (trem-delete-backward-bracket-text))))
+     (t
+      (delete-char -1)))))
+
+(defun trem-delete-backward-bracket-text ()
+  "Delete the matching brackets/quotes to the left of cursor, including the inner text.
+
+This command assumes the left of cursor is a right bracket, and there's a matching one before it.
+
+What char is considered bracket or quote is determined by current syntax table.
+
+URL `http://ergoemacs.org/emacs/emacs_delete_backward_char_or_bracket_text.html'
+Version 2017-09-21"
+  (interactive)
+  (progn
+    (forward-sexp -1)
+    (mark-sexp)
+    (kill-region (region-beginning) (region-end))))
+
+(defun trem-delete-backward-bracket-pair ()
+  "Delete the matching brackets/quotes to the left of cursor.
+
+After the command, mark is set at the left matching bracket position, so you can `exchange-point-and-mark' to select it.
+
+This command assumes the left of point is a right bracket, and there's a matching one before it.
+
+What char is considered bracket or quote is determined by current syntax table.
+
+URL `http://ergoemacs.org/emacs/emacs_delete_backward_char_or_bracket_text.html'
+Version 2017-07-02"
+  (interactive)
+  (let (( $p0 (point)) $p1)
+    (forward-sexp -1)
+    (setq $p1 (point))
+    (goto-char $p0)
+    (delete-char -1)
+    (goto-char $p1)
+    (delete-char 1)
+    (push-mark (point) t)
+    (goto-char (- $p0 2))))
+
+(defun trem-delete-forward-bracket-pairs ( &optional @delete-inner-text-p)
+  "Delete the matching brackets/quotes to the right of cursor.
+If @delete-inner-text-p is true, also delete the inner text.
+
+After the command, mark is set at the left matching bracket position, so you can `exchange-point-and-mark' to select it.
+
+This command assumes the char to the right of point is a left bracket or quote, and have a matching one after.
+
+What char is considered bracket or quote is determined by current syntax table.
+
+URL `http://ergoemacs.org/emacs/emacs_delete_backward_char_or_bracket_text.html'
+Version 2017-07-02"
+  (interactive)
+  (if @delete-inner-text-p
+      (progn
+        (mark-sexp)
+        (kill-region (region-beginning) (region-end)))
+    (let (($pt (point)))
+      (forward-sexp)
+      (delete-char -1)
+      (push-mark (point) t)
+      (goto-char $pt)
+      (delete-char 1))))
+
+(defun trem-kill-backward ()
+  "Kill selected text or char backward or bracket pair."
+  (interactive "p")
+  (if (use-region-p)
+	(kill-region (region-beginning) (region-end))
+    (trem-delete-backward-char-or-bracket-text)))
+
+(defun trem-kill-forward ()
+  "Kill selected text or char forward or bracket pair."
+  (interactive "p")
+  (if (use-region-p)
+	(kill-region (region-beginning) (region-end))
+    (trem-delete-forward-char-or-bracket-text)))
 
 ;; <<< END UTILITIES >>>
 
@@ -1415,7 +1386,7 @@ Version 2017-09-22 2020-09-08"
 	   ("l" end-of-line :norepeat t)))
 
    ;; fast marking
-   ("f" set-mark-command)
+   ("d" set-mark-command)
    ("e" er/expand-region)
    ("4" mark-whole-buffer)
    ("5" mark-symbol :repeat t)
@@ -1426,14 +1397,14 @@ Version 2017-09-22 2020-09-08"
    
    
    ;; most used, killing/yanking, undoing, repeating
-   ("d" trem-d :norepeat t)
+   ("f" trem-kill-forward :norepeat t)
+   ("s" trem-kill-backward :norepeat t)
    ("c" kill-ring-save :norepeat t)
    ("v" yank :norepeat t)
    ("SPC v" yank-pop)
    ("t" undo :norepeat t)
    ("r" trem-modal-repeat :norepeat t)
    ("g" "C-g" :norepeat t) ;; universal quit
-
 
    ;; editing, general text manipulation
    ("z" comment-region)
