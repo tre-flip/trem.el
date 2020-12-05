@@ -1301,7 +1301,9 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
    ("a" recenter-top-bottom :norepeat t)
    
 
-   ;; fast text edit 
+   ;; fast text manipulation
+   ("/" trem-kill-forward :norepeat t :exit t)
+   
    ("f" trem-kill-forward :norepeat t)
    ("s" trem-kill-backward :norepeat t)
 
@@ -1318,8 +1320,7 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
    ;; editing, general text manipulation
    ("z" comment-region)
    ("SPC" (("z" uncomment-region)
-	   ("d" kill-region :exit t)
-	   ("p" trem-replace-selection)))
+	   ))
    
 
    ;; execution
