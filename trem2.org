@@ -1,36 +1,11 @@
 * TASKS
-** TODO make it more ergonomic
-   - ban all single-hand command sequences, every complex command should use both hands _alternately_
-   - don't bind (q a z p ; / [ ] ' shift ctrl) to minimize usage of pinkies
-   - forget about mnemonics, it's not a problem with which-key
-   - use _space_ as a mod-key, use it more (space space should insert space)
-   - probably use hydras to reduce the amount of keystrokes
 
-** TODO implement text objects
-   - switching betwen text objects should be efficient and fast
-   - there should be a dedicated key for entering text-object-mode for every type of text object.
-
-** TODO find or write a better key engine
+** TODO write a better key engine
    - implement several navigation modes, including text object navigation
 
 ** TODO implement convinient isearch
 
-** TODO implement noncontigous marking
-
-** TODO configure keyboard quit (g) to work in multiple-cursors mode
-
-** TODO use avy more for faster movement
-   - implemeted trem-goto-word-and-mark
-
-*** TODO implement a toplevel function for marking and navigation.
-
-** TODO add more evaluation commands
-
-** TODO add more 
-
 ** TODO bind rect selection
-
-** TODO consider using forward-same-syntax  
 
 ** TODO get rid of annoying quirks
    - map russian characters
@@ -38,7 +13,10 @@
    - add more convinient bindings that exit modal state properly
    - all unused single-key presses are nil 
 
-** TODO examine xah-fly-keys and steal good functions
+** TODO implement sane 2-kyestroke bindings with space as a general modkey
+   - use SPC, numbers and usual keys to bind the most used commands
+
+** DONE examine xah-fly-keys and steal good functions
      
 * IDEAS
   

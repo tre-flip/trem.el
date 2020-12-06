@@ -1302,7 +1302,8 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
   
    ;; recenter/focus, scrolling
    ("a" recenter-top-bottom :norepeat t)
-   
+   ("-" trem-scroll-up :norepeat t)
+   ("=" trem-scroll-down :norepeat t)
 
    ;; fast text manipulation
    ("/" trem-kill-forward :norepeat t :exit t)
@@ -1358,12 +1359,13 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
    
    ;; slow buffer and file management
    ("SPC f" (("o" find-file)
-		 ("d" dired)
-		 ("l" list-buffers)
-		 ("k" kill-buffer)
-		 ("s" save-buffer)
-		 ("j" save-some-buffers))
-	    :name "file/buffer")
+	     ("d" dired)
+	     ("l" list-buffers)
+	     ("k" kill-buffer)
+	     ("s" save-buffer)
+	     ("j" switch-to-buffer)
+	     ("i" save-some-buffers))
+    :name "file/buffer")
    ))
 
 
