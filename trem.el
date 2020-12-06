@@ -1327,15 +1327,16 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
 
    ;; fast execution
    ("x" execute-extended-command)
-   ("b" eshell)
    
    ;; slow execution
    ("SPC" (("x" (("s" trem-shell-pipe)
+		 ("e" eshell)
 		 ("b" eval-buffer)
 		 ("r" eval-region)))))
    
 
    ;; unused keys are blocked
+   ("b" nil :norepeat t)
    ("p" nil :norepeat t)
    ("q" nil :norepeat t))
 
@@ -1344,21 +1345,25 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
    (:mc-all 0)
    
    ;; fast window management
+   ("1" make-frame)
    ("2" delete-window)
    ("3" other-window :norepeat t)
    ("4" split-window-right :norepeat t)
    ("5" split-window-below :norepeat t)
    ("6" delete-other-windows :norepeat t)
 
+   
    ;; fast buffer management
    ("n" trem-next-user-buffer :norepeat t)
    
    ;; slow buffer and file management
-   ("SPC" (("f" (("o" find-file)
+   ("SPC f" (("o" find-file)
 		 ("d" dired)
+		 ("l" list-buffers)
+		 ("k" kill-buffer)
 		 ("s" save-buffer)
 		 ("j" save-some-buffers))
-	    :name "file/buffer")))
+	    :name "file/buffer")
    ))
 
 
