@@ -1,7 +1,6 @@
 * TASKS
 
-** TODO write a better key engine
-   - implement several navigation modes, including text object navigation
+** TODO switch to modalka
 
 ** TODO implement convinient isearch
 
@@ -13,9 +12,6 @@
    - add more convinient bindings that exit modal state properly
    - all unused single-key presses are nil 
 
-** TODO implement sane 2-kyestroke bindings with space as a general modkey
-   Use SPC and SPC Meta, numbers and usual keys to bind the most used commands.   
-
 ** DONE examine xah-fly-keys and steal good functions
      
 * IDEAS
@@ -25,14 +21,17 @@
 
    If avy is used to navigate to anywhere and mark-state is not nil, then expand region according to symbol in mark-state. _USE ADVICE TO IMPLEMENT IT_
 
-* KEYBINDINGS
 
-** PLAIN MAP
+* TODO KEYBINDINGS
+
+** TODO PLAIN MAP
    Contains the most used commands, navigation and simple editing mostly.
-** SPC MAP
-   Contains the most used commands which aren't related to navigation. Put buffer saving, region evaluation, jumping etc here.
-** SPC c/, MAP
+** TODO SPC MAP
+   Contains the most used commands which aren't related to navigation. 
+   Put buffer saving, region evaluation, jumping etc here.
+** TODO SPC c/, MAP
    Contains commands that are not used too often.
+
 * TOOLS
   - phi-search
     https://github.com/zk-phi/phi-search
