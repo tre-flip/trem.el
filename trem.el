@@ -1011,6 +1011,11 @@ If so, place cursor there, print error to message buffer."
   (interactive)
   )
 
+(defun trem-eval-region ()
+  (interactive)
+  )
+
+
 ;; <<< END UTILITIES >>>
 
 
@@ -1084,10 +1089,10 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "4" #'split-window-right)
     (bnd-1 "5" #'split-window-below)
     (bnd-1 "6" #'delete-other-windows)
-
+    (bnd-1 "<f5>" #'kill-buffer-and-window)
     ;; fast buffer management
     (bnd-1 "n" #'trem-next-user-buffer)
-
+    
     ;; help for this keymap
     (bnd-1 "`" #'trem-help-map)
     
@@ -1106,8 +1111,21 @@ If so, place cursor there, print error to message buffer."
     (bnd-2 "v" #'yank-pop)
 
     ;; beginning/end of buffer
-    (bnd-2 "c" #')
-    
+    (bnd-2 "i" #'beginning-of-buffer)
+    (bnd-2 "k" #'end-of-buffer)
+
+    ;; uncommet region
+    (bnd-2 "z" #'uncomment-region)
+
+    ;; mode specific buffer/region evaluation
+    (bnd-2 "c" #'trem-eval-buffer)
+    (bnd-2 "e" #'trem-eval-region)
+
+    ;; buffer/file management
+    (bnd-2 "o" #'find-file)
+    (bnd-2 "n" #'trem-next-emacs-buffer)
+    (bnd-2 "j" #'switch-to-buffer)
+    (bnd-2 "s" #'save-buffer)
     ))
 
 
