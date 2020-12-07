@@ -102,6 +102,33 @@ Otherwise use `list'."
 
 ;; <<< BEGIN UTILITIES >>>
 
+(defun trem-toggle-letter-case ()
+  "Toggle the letter case of current word or text selection.
+Always cycle in this order: Init Caps, ALL CAPS, all lower."
+  (interactive)
+  (let (
+        (deactivate-mark nil)
+        $p1 $p2)
+    (if (use-region-p)
+        (setq $p1 (region-beginning) $p2 (region-end))
+      (save-excursion
+        (skip-chars-backward "[:alpha:]")
+        (setq $p1 (point))
+        (skip-chars-forward "[:alpha:]")
+        (setq $p2 (point))))
+    (when (not (eq last-command this-command))
+      (put this-command 'state 0))
+    (cond
+     ((equal 0 (get this-command 'state))
+      (upcase-initials-region $p1 $p2)
+      (put this-command 'state 1))
+     ((equal 1 (get this-command 'state))
+      (upcase-region $p1 $p2)
+      (put this-command 'state 2))
+     ((equal 2 (get this-command 'state))
+      (downcase-region $p1 $p2)
+      (put this-command 'state 0)))))
+
 (defun trem-goto-word-and-mark ()
   "Invoke avy to go to word, maybe mark it."
   (interactive)
@@ -953,6 +980,12 @@ If so, place cursor there, print error to message buffer."
                 (message "Mismtach found. The char %s has no matching pair." $stack))
             (print "All brackets/quotes match.")))))))
 
+(defun trem-change ()
+  "Kill forward and exit CMD mode"
+  (interactive)
+  (trem-kill-forward)
+  (trem-mode -1))
+
 ;; <<< END UTILITIES >>>
 
 
@@ -1000,7 +1033,7 @@ If so, place cursor there, print error to message buffer."
     (bnd "=" trem-scroll-down)
 
     ;; fast text manipulation
-    (bnd "/" trem-kill-forward)
+    (bnd "/" )
     (bnd "f" trem-kill-forward)
     (bnd "s" trem-kill-backward)
     (bnd "w" trem-kill-backward-bracket-text)
@@ -1026,16 +1059,15 @@ If so, place cursor there, print error to message buffer."
     (bnd "n" trem-next-user-buffer)
 
     ;; unused keys are blocked
-    (bnd "b" nil)
-    (bnd "p" nil)
-    (bnd "q" nil)
+    (bnd "b" ignore)
+    (bnd "p" ignore)
+    (bnd "q" ignore)
 
     ;; TWO KEYSTROKE COMMANNDS ;;
-    
-    )
 
-  
-  ))
+    (bnd )
+    
+    ))
 
 
 ;; <<< END BINDINGS >>>
