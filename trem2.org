@@ -1,5 +1,6 @@
 * TASKS
 
+** TODO use _delete-pair_ to delete matching pairs on 
 ** TODO switch to modalka
 
 ** TODO implement convinient isearch
@@ -14,6 +15,118 @@
 
 ** DONE examine xah-fly-keys and steal good functions
      
+   
+* OLD BINDS
+(defun trem-setup-keybinds ()
+  "Set up default trem keybindings for normal mode."
+  (global-subword-mode 1)
+
+  ;; commands that are repeated for all cursors
+  (trem-modal-keys
+
+   (:mc-all t)
+
+   ;; quit
+   ("g" "C-g" :norepeat t)
+   ("SPC g" "C-g" :name "abort" :norepeat t)
+
+   
+   ;; movement keys  
+   ("i" previous-line :norepeat t)
+   ("j" backward-char :norepeat t)
+   ("k" next-line     :norepeat t)
+   ("l" forward-char  :norepeat t)
+
+   ("m" trem-backward-left-bracket :norepeat t)
+   ("." trem-forward-right-bracket :norepeat t)
+   ("," avy-goto-word-1 :norepeat t)
+
+   ("u" backward-word :norepeat t)
+   ("o" forward-word :norepeat t)
+
+   ("h" trem-beginning-of-line-or-block)
+   (";" trem-end-of-line-or-block)
+   
+   ;; alternative movement
+   ("SPC" (("i" beginning-of-buffer :norepeat t)    
+	   ("k" end-of-buffer :norepeat t)))
+    
+     
+   ;; fast marking
+   ("d" trem-toggle-mark :norepeat t)
+   ("e" er/expand-region :norepeat t)
+   ("7" trem-mark-line :norepeat t)
+   ("8" trem-mark-block :norepeat t)
+   ("9" mark-whole-buffer :norepeat t)
+   
+  
+   ;; recenter/focus, scrolling
+   ("a" recenter-top-bottom :norepeat t)
+   ("-" trem-scroll-up :norepeat t)
+   ("=" trem-scroll-down :norepeat t)
+
+   ;; fast text manipulation
+   ("/" trem-kill-forward :norepeat t :exit t)
+   
+   ("f" trem-kill-forward :norepeat t)
+   ("s" trem-kill-backward :norepeat t)
+
+   ("w" trem-kill-backward-bracket-text :norepeat t)
+   ("r" trem-kill-forward-bracket-text  :norepeat t)
+
+   ("c" kill-ring-save :norepeat t)
+   ("v" yank :norepeat t)
+   ("SPC v" yank-pop)
+   ("t" undo :norepeat t)
+   ("y" trem-modal-repeat :norepeat t)
+   
+
+   ;; editing, general text manipulation
+   ("z" comment-region)
+   ("SPC z" uncomment-region)
+   
+
+   ;; fast execution
+   ("x" execute-extended-command)
+   
+   ;; slow execution
+   ("SPC" (("x" (("s" trem-shell-pipe)
+		 ("e" eshell)
+		 ("b" eval-buffer)
+		 ("r" eval-region)))))
+   
+
+   ;; unused keys are blocked
+   ("b" nil :norepeat t)
+   ("p" nil :norepeat t)
+   ("q" nil :norepeat t))
+
+  ;; commands that aren't repeated for each cursor
+  (trem-modal-keys
+   (:mc-all 0)
+   
+   ;; fast window management
+   ("1" make-frame)
+   ("2" delete-window)
+   ("3" other-window :norepeat t)
+   ("4" split-window-right :norepeat t)
+   ("5" split-window-below :norepeat t)
+   ("6" delete-other-windows :norepeat t)
+
+   
+   ;; fast buffer management
+   ("n" trem-next-user-buffer :norepeat t)
+   
+   ;; slow buffer and file management
+   ("SPC f" (("o" find-file)
+	     ("d" dired)
+	     ("l" list-buffers)
+	     ("k" kill-buffer)
+	     ("s" save-buffer)
+	     ("j" switch-to-buffer)
+	     ("i" save-some-buffers))
+    :name "file/buffer")
+   ))
 
 * TODO KEYBINDINGS
 ** DONE PLAIN MAP
@@ -21,21 +134,45 @@
 ** TODO SPC MAP
    Contains the most used commands which aren't related to navigation. 
    Put buffer saving, region evaluation, jumping etc here.
-*** TODO find-file
-*** TODO jump to buffer
-*** TODO kill buffer
-*** TODO save buffer
-*** TODO run eshell
-*** TODO eval region (mode-dependent)
-*** TODO compile/eval buffer (mode-dependent)
-*** TODO end of buffer
-*** TODO beginning of buffer
-*** TODO change case dwim
-*** TODO switch to buffer
-*** TODO yank-pop
-*** TODO uncomment region
+*** DONE yank-pop
+*** DONE end of buffer
+*** DONE beginning of buffer
+*** DONE uncomment region 
+*** DONE find-file
+*** DONE jump to buffer
+*** DONE kill buffer
+*** DONE save buffer
+*** DONE switch to buffer
+*** DONE run eshell
+*** DONE end of buffer
+*** DONE beginning of buffer
+*** DONE eval region (mode-dependent)
+*** DONE compile/eval buffer (mode-dependent)
+
 ** TODO SPC c/, MAP
    Contains commands that are not used too often.
+
+*** TODO open in new window
+*** TODO save some buffers
+
+
+** UNDECIDED
+   open kill ring
+   list buffers
+   isearch forward
+   isearch backward
+   regex replace
+   query replace
+   mv/edit lines
+   mc/insert numbers
+   enlage window 
+   shrink window
+   split line
+   split line and exit
+   replace selection with killed text
+   append to register
+   paste from register
+   replace brackets
 
 * TOOLS
   - phi-search

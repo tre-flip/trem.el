@@ -21,7 +21,7 @@
 
 ;; <<< BEGIN SPECIAL VARIABLES >>>
 
-()
+(defvar-local trem-shell "bash")
 
 ;; <<< END SPECIAL VARIABLES >>>
 
@@ -80,36 +80,6 @@ Otherwise use `list'."
 ;; <<< END MODE >>>
 
 
-;; <<< BEGIN SHELL >>>
-(defun trem-shell-pipe ()
-  "Run a shell command on each of the current regions separately and replace the current regions with its output."
-  (interactive)
-  (let ((command (read-string "Pipe: ")))
-    (mc/for-each-cursor-ordered
-     (shell-command-on-region (mc/cursor-beg cursor)
-                              (mc/cursor-end cursor)
-                              command
-                              nil
-                              1))))
-(defun trem-shell-command ()
-  "Run a shell command on each of the current regions separately and insert its output before the respective regions."
-  (interactive)
-  (mc/save-excursion
-   (let ((command (read-string "Pipe: ")))
-     (mc/for-each-cursor-ordered
-      (mc/save-excursion
-       (goto-char (mc/cursor-beg cursor))
-       (insert
-        (with-output-to-string
-          (shell-command-on-region (mc/cursor-beg cursor)
-                                   (mc/cursor-end cursor)
-                                   command
-                                   standard-output))))))))
-;; <<< END SHELL >>>
-
-
-;; <<< BEGIN UTILITIES >>>
-
 (defun trem-toggle-case ()
   "Toggle the letter case of current word or text selection.
 Always cycle in this order: Init Caps, ALL CAPS, all lower."
@@ -136,12 +106,6 @@ Always cycle in this order: Init Caps, ALL CAPS, all lower."
      ((equal 2 (get this-command 'state))
       (downcase-region $p1 $p2)
       (put this-command 'state 0)))))
-
-(defun trem-goto-word-and-mark ()
-  "Invoke avy to go to word, maybe mark it."
-  (interactive)
-  (commmaybe-execute #'avy-goto-word-1)
-  (commmaybe-execute #'er/expand-region))
 
 (defun trem-mark-block ()
   "Select the current/next block of text between blank lines.
@@ -174,26 +138,7 @@ If region is active, extend selection downward by block."
 (defun trem-scroll-down ()
   (interactive)
   (scroll-down 2))
-
-(defun trem-set-mark-if-inactive () "Set the mark if it isn't active."
-       (interactive)
-       (unless (use-region-p) (set-mark (point))))
-
-(defun trem-set-mark-here () "Set the mark at the location of the point."
-       (interactive) (set-mark (point)))
-
-(defun trem-backward-symbol (count)
-  "Move backward COUNT times by symbol."
-  (interactive "p")
-  (forward-symbol (- count)))
-
-(defun trem-backward-same-syntax (count)
-  "Move backward COUNT times by same syntax blocks."
-  (interactive "p")
-  (forward-same-syntax (- count)))
-
  
-
 (defun trem-replace-selection ()
   "Replace selection with killed text."
   (interactive)
@@ -202,13 +147,6 @@ If region is active, extend selection downward by block."
 	         (yank))
     (progn (delete-region (point) (1+ (point)))
 	       (yank))))
-
-(defun trem-forward-sexp-maybe-mark ()
-  (interactive)
-  (sp-beginning-of-next-sexp)
-  (backward-char)
-  (when trem-marking-flag
-    (sp-mark-sexp)))
 
 (defun trem-delete-blank-lines ()
   "Delete all newline around cursor."
@@ -1001,10 +939,12 @@ If so, place cursor there, print error to message buffer."
 
 (defun trem-help-map-2 ()
   "Display help for trem's double keystroke keymap"
+  (interactive)
   (which-key-show-full-keymap 'trem-mode-map-2))
 
 (defun trem-help-map-3 ()
   "Display help for trem's triple keystroke keymap"
+  (interactive)
   (which-key-show-full-keymap 'trem-mode-map-3))
 
 (defun trem-eval-buffer ()
@@ -1063,8 +1003,8 @@ If so, place cursor there, print error to message buffer."
     
     ;; recenter/focus, scrolling
     (bnd-1 "a" #'recenter-top-bottom)
-    (bnd-1 "-" #'trem-scroll-up)
-    (bnd-1 "=" #'trem-scroll-down)
+    (bnd-1 "-" #'trem-scroll-down)
+    (bnd-1 "=" #'trem-scroll-up)
 
     ;; fast text manipulation
     (bnd-1 "/" #'trem-change)
@@ -1090,15 +1030,16 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "5" #'split-window-below)
     (bnd-1 "6" #'delete-other-windows)
     (bnd-1 "<f5>" #'kill-buffer-and-window)
+
     ;; fast buffer management
     (bnd-1 "n" #'trem-next-user-buffer)
+    (bnd-1 "q" #'kill-buffer)
     
     ;; help for this keymap
     (bnd-1 "`" #'trem-help-map)
     
     ;; unused keys are blocked
     (bnd-1 "p" #'ignore)
-    (bnd-1 "q" #'ignore)
 
     ;; prefix for 2-keystroke commands
     (bnd-1 "SPC" 'trem-mode-map-2)
@@ -1110,22 +1051,28 @@ If so, place cursor there, print error to message buffer."
     ;; yank-pop
     (bnd-2 "v" #'yank-pop)
 
-    ;; beginning/end of buffer
+    ;; advanced navigation
     (bnd-2 "i" #'beginning-of-buffer)
     (bnd-2 "k" #'end-of-buffer)
-
-    ;; uncommet region
+    (bnd-2 "l" #'goto-line)
+    
+    ;; uncomment region
     (bnd-2 "z" #'uncomment-region)
 
     ;; mode specific buffer/region evaluation
     (bnd-2 "c" #'trem-eval-buffer)
     (bnd-2 "e" #'trem-eval-region)
-
+    
     ;; buffer/file management
     (bnd-2 "o" #'find-file)
     (bnd-2 "n" #'trem-next-emacs-buffer)
     (bnd-2 "j" #'switch-to-buffer)
     (bnd-2 "s" #'save-buffer)
+    
+    ;; shells
+    (bnd-2 "p" #'trem-shell-pipe)
+    (bnd-2 "t" #'eshell)
+    
     ))
 
 
