@@ -21,9 +21,12 @@
 
 ;; <<< BEGIN SPECIAL VARIABLES >>>
 
+(defvar-local trem-eval-buffer-f #'ignore)
+(defvar-local trem-eval-region-f #'ignore)
 (defvar-local trem-shell "bash")
 
 ;; <<< END SPECIAL VARIABLES >>>
+
 
 ;; <<< BEGIN MODE >>>
 (defgroup trem nil
@@ -231,44 +234,6 @@ If already has just 1 whitespace, delete it."
   (if (use-region-p)
       (deactivate-mark)
       (command-execute #'set-mark-command)))
-
-(defun trem-reformat-lines ( &optional @length)
-  "Reformat current text block or selection into short lines or 1 long line.
-When called for the first time, change to one long line. Second call change it to multiple short lines. Repeated call toggles.
-
-If `universal-argument' is called first, use the number value for min length of line. By default, it's 70.
-"
-  (interactive)
-  ;; This command symbol has a property “'is-longline-p”, the possible values are t and nil. This property is used to easily determine whether to compact or uncompact, when this command is called again
-  (let* (
-         (@length (if @length
-                      @length
-                    (if current-prefix-arg (prefix-numeric-value current-prefix-arg) fill-column )))
-         (is-longline-p
-          (if (eq last-command this-command)
-              (get this-command 'is-longline-p)
-            nil))
-         ($blanks-regex "\n[ \t]*\n")
-         $p1 $p2
-         )
-    (if (use-region-p)
-         (setq $p1 (region-beginning) $p2 (region-end))
-      (save-excursion
-        (if (re-search-backward $blanks-regex nil "move")
-            (progn (re-search-forward $blanks-regex)
-                   (setq $p1 (point)))
-          (setq $p1 (point)))
-        (if (re-search-forward $blanks-regex nil "move")
-            (progn (re-search-backward $blanks-regex)
-                   (setq $p2 (point)))
-          (setq $p2 (point)))))
-    (progn
-      (if current-prefix-arg
-          (trem-reformat-to-multi-lines $p1 $p2 @length)
-        (if is-longline-p
-            (trem-reformat-to-multi-lines $p1 $p2 @length)
-          (trem-reformat-whitespaces-to-one-space $p1 $p2)))
-      (put this-command 'is-longline-p (not is-longline-p)))))
 
 (defun trem-reformat-whitespaces-to-one-space (@begin @end)
   "Replace whitespaces by one space."
@@ -581,76 +546,6 @@ Version 2018-04-02"
           (setq $p4 (point))
           (delete-region $p3 $p4)))
 
-(defun trem-fly-delete-spaces ()
-  "Delete space, tab, IDEOGRAPHIC SPACE (U+3000) around cursor.
-Version 2019-06-13"
-  (interactive)
-  (let (p1 p2)
-    (skip-chars-forward " \t　")
-    (setq p2 (point))
-    (skip-chars-backward " \t　")
-    (setq p1 (point))
-    (delete-region p1 p2)))
-
-(defun trem-shrink-whitespaces ()
-  "Remove whitespaces around cursor to just one, or none.
-
-Shrink any neighboring space tab newline characters to 1 or none.
-If cursor neighbor has space/tab, toggle between 1 or 0 space.
-If cursor neighbor are newline, shrink them to just 1.
-If already has just 1 whitespace, delete it.
-
-URL `http://ergoemacs.org/emacs/emacs_shrink_whitespace.html'
-Version 2019-06-13"
-  (interactive)
-  (let* (
-         ($eol-count 0)
-         ($p0 (point))
-         $p1 ; whitespace begin
-         $p2 ; whitespace end
-         ($charBefore (char-before))
-         ($charAfter (char-after ))
-         ($space-neighbor-p (or (eq $charBefore 32) (eq $charBefore 9) (eq $charAfter 32) (eq $charAfter 9)))
-         $just-1-space-p
-         )
-    (skip-chars-backward " \n\t　")
-    (setq $p1 (point))
-    (goto-char $p0)
-    (skip-chars-forward " \n\t　")
-    (setq $p2 (point))
-    (goto-char $p1)
-    (while (search-forward "\n" $p2 t )
-      (setq $eol-count (1+ $eol-count)))
-    (setq $just-1-space-p (eq (- $p2 $p1) 1))
-    (goto-char $p0)
-    (cond
-     ((eq $eol-count 0)
-      (if $just-1-space-p
-          (trem-fly-delete-spaces)
-        (progn (trem-fly-delete-spaces)
-               (insert " ")))
-      )
-     ((eq $eol-count 1)
-      (if $space-neighbor-p
-          (trem-fly-delete-spaces)
-        (progn (trem-delete-blank-lines) (insert " "))))
-     ((eq $eol-count 2)
-      (if $space-neighbor-p
-          (trem-fly-delete-spaces)
-        (progn
-          (trem-delete-blank-lines)
-          (insert "\n"))))
-     ((> $eol-count 2)
-      (if $space-neighbor-p
-          (trem-fly-delete-spaces)
-        (progn
-          (goto-char $p2)
-          (search-backward "\n" )
-          (delete-region $p1 (point))
-          (insert "\n"))))
-     (t (progn
-          (message "nothing done. logic error 40873. shouldn't reach here" ))))))
-
 
 (defun trem-reformat-lines ( &optional @length)
   "Reformat current text block or selection into short lines or 1 long line.
@@ -687,29 +582,6 @@ If `universal-argument' is called first, use the number value for min length of 
             (trem-reformat-to-multi-lines $p1 $p2 @length)
           (trem-reformat-whitespaces-to-one-space $p1 $p2)))
       (put this-command 'is-longline-p (not is-longline-p)))))
-
-
-(defun trem-space-to-newline ()
-  "Replace space sequence to a newline char.
-Works on current block or selection."
-  (interactive)
-  (let* ( $p1 $p2 )
-    (if (use-region-p)
-        (setq $p1 (region-beginning) $p2 (region-end))
-      (save-excursion
-        (if (re-search-backward "\n[ \t]*\n" nil "move")
-            (progn (re-search-forward "\n[ \t]*\n")
-                   (setq $p1 (point)))
-          (setq $p1 (point)))
-        (re-search-forward "\n[ \t]*\n" nil "move")
-        (skip-chars-backward " \t\n" )
-        (setq $p2 (point))))
-    (save-excursion
-      (save-restriction
-        (narrow-to-region $p1 $p2)
-        (goto-char (point-min))
-        (while (re-search-forward " +" nil t)
-          (replace-match "\n" ))))))
 
 (defun trem-user-buffer-q ()
   "Return t if current buffer is a user buffer, else nil.
@@ -782,31 +654,6 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
           (while (re-search-forward "\n\n\n+" nil "move")
             (replace-match "\n\n")))))))
 
-(defun trem-clean-whitespace ()
-  "Delete trailing whitespace, and replace repeated blank lines to just 1.
-Only space and tab is considered whitespace here.
-Works on whole buffer or text selection, respects `narrow-to-region'."
-  (interactive)
-  (let ($begin $end)
-    (if (use-region-p)
-        (setq $begin (region-beginning) $end (region-end))
-      (setq $begin (point-min) $end (point-max)))
-    (save-excursion
-      (save-restriction
-        (narrow-to-region $begin $end)
-        (progn
-          (goto-char (point-min))
-          (while (re-search-forward "[ \t]+\n" nil "move")
-            (replace-match "\n")))
-        (progn
-          (goto-char (point-min))
-          (while (re-search-forward "\n\n\n+" nil "move")
-            (replace-match "\n\n")))
-        (progn
-          (goto-char (point-max))
-          (while (equal (char-before) 32) ; char 32 is space
-            (delete-char -1))))
-      (message "white space cleaned"))))
 
 (defun trem-kill-forward-bracket-text ()
   (interactive)
@@ -949,13 +796,16 @@ If so, place cursor there, print error to message buffer."
 
 (defun trem-eval-buffer ()
   (interactive)
-  )
+  (command-execute trem-eval-buffer-f))
 
 (defun trem-eval-region ()
   (interactive)
-  )
+  (command-execute trem-eval-region-f))
 
-
+(defun trem-split-line-and-quit ()
+  (interactive)
+  (split-line)
+  (trem-mode -1))
 ;; <<< END UTILITIES >>>
 
 
@@ -1037,7 +887,12 @@ If so, place cursor there, print error to message buffer."
     
     ;; help for this keymap
     (bnd-1 "`" #'trem-help-map)
-    
+
+    ;; isearch
+    (bnd-1 "<f7>" #'isearch-forward)
+    (define-key isearch-mode-map (kbd "<f6>") #'isearch-repeat-backward)
+    (define-key isearch-mode-map (kbd "<f8>") #'isearch-repeat-forward)
+
     ;; unused keys are blocked
     (bnd-1 "p" #'ignore)
 
@@ -1047,7 +902,7 @@ If so, place cursor there, print error to message buffer."
     ;; TWO KEYSTROKE COMMANNDS ;;
 
     (bnd-2 "`" #'trem-help-map-2)
-
+    
     ;; yank-pop
     (bnd-2 "v" #'yank-pop)
 

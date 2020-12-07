@@ -172,8 +172,14 @@
    replace selection with killed text
    append to register
    paste from register
+   clear register
    replace brackets
-
+   reformat lines
+   space to newline
+   shring whitespaces
+   clean blank lines
+   check paren balance
+   
 * TOOLS
   - phi-search
     https://github.com/zk-phi/phi-search
