@@ -14,21 +14,26 @@
 
 ** DONE examine xah-fly-keys and steal good functions
      
-* IDEAS
-  
-** object manipulation 
-   A sequence "special-key char" selects an object type when in modal mode, where _char_ is the first letter of text object name.
-
-   If avy is used to navigate to anywhere and mark-state is not nil, then expand region according to symbol in mark-state. _USE ADVICE TO IMPLEMENT IT_
-
 
 * TODO KEYBINDINGS
-
-** TODO PLAIN MAP
+** DONE PLAIN MAP
    Contains the most used commands, navigation and simple editing mostly.
 ** TODO SPC MAP
    Contains the most used commands which aren't related to navigation. 
    Put buffer saving, region evaluation, jumping etc here.
+*** TODO find-file
+*** TODO jump to buffer
+*** TODO kill buffer
+*** TODO save buffer
+*** TODO run eshell
+*** TODO eval region (mode-dependent)
+*** TODO compile/eval buffer (mode-dependent)
+*** TODO end of buffer
+*** TODO beginning of buffer
+*** TODO change case dwim
+*** TODO switch to buffer
+*** TODO yank-pop
+*** TODO uncomment region
 ** TODO SPC c/, MAP
    Contains commands that are not used too often.
 

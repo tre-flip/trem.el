@@ -26,49 +26,13 @@
   :group  'editing
   :tag    "Trem"
   :prefix "trem-"
-  :link   '(url-link :tag "GitHub" "https://github.com/mrkkrp/trem"))
+  ;; :link   '(url-link :tag "GitHub" "https://github.com/mrkkrp/trem")
+  )
 
 ;;;###autoload
 
 (defvar trem-mode-map (make-sparse-keymap)
   "This is Trem mode map, used to translate your keys.")
-
-;;;###autoload
-(defun trem-define-key (actual-key target-key)
-  "Register translation from ACTUAL-KEY to TARGET-KEY."
-  (define-key
-    trem-mode-map
-    actual-key
-    (defalias (make-symbol "trem-translation")
-      (lambda ()
-        (interactive)
-        (let ((binding (key-binding target-key)))
-          (unless (or (memq binding '(nil undefined))
-                      (keymapp binding))
-            (call-interactively binding))))
-      `(format "This command translates %s into %s, which calls `%s'."
-               (key-description ,actual-key)
-               (key-description ,target-key)
-               (key-binding     ,target-key)))))
-
-;;;###autoload
-(defun trem-define-kbd (actual-kbd target-kbd)
-  "Register translation from ACTUAL-KBD to TARGET-KBD.
-Arguments are accepted in in the format used for saving keyboard
-macros (see `edmacro-mode')."
-  (trem-define-key (kbd actual-kbd) (kbd target-kbd)))
-
-;;;###autoload
-(defun trem-remove-key (key)
-  "Unregister translation from KEY."
-  (define-key trem-mode-map key nil))
-
-;;;###autoload
-(defun trem-remove-kbd (kbd)
-  "Unregister translation from KBD.
-Arguments are accepted in in the format used for saving keyboard
-macros (see `edmacro-mode')."
-  (trem-remove-key (kbd kbd)))
 
 ;;;###autoload
 (define-minor-mode trem-mode
@@ -927,7 +891,70 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
 (defun trem-insert-space ()
   (interactive)
   (insert " "))
+
+(defun trem-check-parens-balance ()
+  "Check if there are unbalanced parentheses/brackets/quotes in current bufffer or selection.
+If so, place cursor there, print error to message buffer."
+  (interactive)
+  (let* (
+         ($bracket-alist
+          '( (?“ . ?”) (?‹ . ?›) (?« . ?») (?【 . ?】) (?〖 . ?〗) (?〈 . ?〉) (?《 . ?》) (?「 . ?」) (?『 . ?』) (?{ . ?}) (?\[ . ?\]) (?\( . ?\))))
+         ;; regex string of all pairs to search.
+         ($bregex
+          (let (($tempList nil))
+            (mapc
+             (lambda (x)
+               (push (char-to-string (car x)) $tempList)
+               (push (char-to-string (cdr x)) $tempList))
+             $bracket-alist)
+            (regexp-opt $tempList )))
+         $p1
+         $p2
+         ;; each entry is a vector [char position]
+         ($stack '())
+         ($char nil)
+         $pos
+         $is-closing-char-p
+         $matched-open-char
+         )
+    (if (region-active-p)
+        (setq $p1 (region-beginning) $p2 (region-end))
+      (setq $p1 (point-min) $p2 (point-max)))
+
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (progn
+          (goto-char 1)
+          (while (re-search-forward $bregex nil "move")
+            (setq $pos (point))
+            (setq $char (char-before))
+            (progn
+              (setq $is-closing-char-p (rassoc $char $bracket-alist))
+              (if $is-closing-char-p
+                  (progn
+                    (setq $matched-open-char
+                          (if $is-closing-char-p
+                              (car $is-closing-char-p)
+                            (error "logic error 64823. The char %s has no matching pair."
+                                   (char-to-string $char))))
+                    (if $stack
+                        (if (eq (aref (car $stack) 0) $matched-open-char )
+                            (pop $stack)
+                          (push (vector $char $pos) $stack ))
+                      (progn
+                        (goto-char $pos)
+                        (error "First mismtach found. the char %s has no matching pair."
+                               (char-to-string $char)))))
+                (push (vector $char $pos) $stack ))))
+          (if $stack
+              (progn
+                (goto-char (aref (car $stack) 1))
+                (message "Mismtach found. The char %s has no matching pair." $stack))
+            (print "All brackets/quotes match.")))))))
+
 ;; <<< END UTILITIES >>>
+
 
 ;; <<< BEGIN BINDINGS >>>
 
@@ -938,112 +965,77 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
   "Set up default trem keybindings for normal mode."
   (global-subword-mode 1)
 
-  ;; commands that are repeated for all cursors
-  (trem-modal-keys
+  ;; use flet to shorten define-key
+  (cl-flet ((bnd (k d)
+		 (define-key trem-mode-keymap d)))
 
-   (:mc-all t)
+    ;; ONE KEYSTROKE COMMANDS ;;
 
-   ;; quit
-   ("g" "C-g" :norepeat t)
-   ("SPC g" "C-g" :name "abort" :norepeat t)
+    ;; movement keys  
+    (bnd "i" previous-line)
+    (bnd "j" backward-char)
+    (bnd "k" next-line    )
+    (bnd "l" forward-char )
 
-   
-   ;; movement keys  
-   ("i" previous-line :norepeat t)
-   ("j" backward-char :norepeat t)
-   ("k" next-line     :norepeat t)
-   ("l" forward-char  :norepeat t)
+    (bnd "m" trem-backward-left-bracket)
+    (bnd "." trem-forward-right-bracket)
+    (bnd "," avy-goto-word-1 )
 
-   ("m" trem-backward-left-bracket :norepeat t)
-   ("." trem-forward-right-bracket :norepeat t)
-   ("," avy-goto-word-1 :norepeat t)
+    (bnd "u" backward-word)
+    (bnd "o" forward-word)
 
-   ("u" backward-word :norepeat t)
-   ("o" forward-word :norepeat t)
-
-   ("h" trem-beginning-of-line-or-block)
-   (";" trem-end-of-line-or-block)
-   
-   ;; alternative movement
-   ("SPC" (("i" beginning-of-buffer :norepeat t)    
-	   ("k" end-of-buffer :norepeat t)))
+    (bnd "h" trem-beginning-of-line-or-block)
+    (bnd ";" trem-end-of-line-or-block)
     
-     
-   ;; fast marking
-   ("d" trem-toggle-mark :norepeat t)
-   ("e" er/expand-region :norepeat t)
-   ("7" trem-mark-line :norepeat t)
-   ("8" trem-mark-block :norepeat t)
-   ("9" mark-whole-buffer :norepeat t)
-   
+    ;; fast marking
+    (bnd "d" trem-toggle-mark)
+    (bnd "e" er/expand-region)
+    (bnd "7" trem-mark-line)
+    (bnd "8" trem-mark-block)
+    (bnd "9" mark-whole-buffer)  
+    
+    ;; recenter/focus, scrolling
+    (bnd "a" recenter-top-bottom)
+    (bnd "-" trem-scroll-up)
+    (bnd "=" trem-scroll-down)
+
+    ;; fast text manipulation
+    (bnd "/" trem-kill-forward)
+    (bnd "f" trem-kill-forward)
+    (bnd "s" trem-kill-backward)
+    (bnd "w" trem-kill-backward-bracket-text)
+    (bnd "r" trem-kill-forward-bracket-text )
+    (bnd "c" kill-ring-save)
+    (bnd "v" yank)
+    (bnd "t" undo)
+    (bnd "y" repeat)
+    (bnd "z" comment-region)
+
+    ;; fast execution
+    (bnd "x" execute-extended-command)
+    
+    ;; fast window management
+    (bnd "1" make-frame)
+    (bnd "2" delete-window)
+    (bnd "3" other-window)
+    (bnd "4" split-window-right)
+    (bnd "5" split-window-below)
+    (bnd "6" delete-other-windows)
+
+    ;; fast buffer management
+    (bnd "n" trem-next-user-buffer)
+
+    ;; unused keys are blocked
+    (bnd "b" nil)
+    (bnd "p" nil)
+    (bnd "q" nil)
+
+    ;; TWO KEYSTROKE COMMANNDS ;;
+    
+    )
+
   
-   ;; recenter/focus, scrolling
-   ("a" recenter-top-bottom :norepeat t)
-   ("-" trem-scroll-up :norepeat t)
-   ("=" trem-scroll-down :norepeat t)
-
-   ;; fast text manipulation
-   ("/" trem-kill-forward :norepeat t :exit t)
-   
-   ("f" trem-kill-forward :norepeat t)
-   ("s" trem-kill-backward :norepeat t)
-
-   ("w" trem-kill-backward-bracket-text :norepeat t)
-   ("r" trem-kill-forward-bracket-text  :norepeat t)
-
-   ("c" kill-ring-save :norepeat t)
-   ("v" yank :norepeat t)
-   ("SPC v" yank-pop)
-   ("t" undo :norepeat t)
-   ("y" trem-modal-repeat :norepeat t)
-   
-
-   ;; editing, general text manipulation
-   ("z" comment-region)
-   ("SPC z" uncomment-region)
-   
-
-   ;; fast execution
-   ("x" execute-extended-command)
-   
-   ;; slow execution
-   ("SPC" (("x" (("s" trem-shell-pipe)
-		 ("e" eshell)
-		 ("b" eval-buffer)
-		 ("r" eval-region)))))
-   
-
-   ;; unused keys are blocked
-   ("b" nil :norepeat t)
-   ("p" nil :norepeat t)
-   ("q" nil :norepeat t))
-
-  ;; commands that aren't repeated for each cursor
-  (trem-modal-keys
-   (:mc-all 0)
-   
-   ;; fast window management
-   ("1" make-frame)
-   ("2" delete-window)
-   ("3" other-window :norepeat t)
-   ("4" split-window-right :norepeat t)
-   ("5" split-window-below :norepeat t)
-   ("6" delete-other-windows :norepeat t)
-
-   
-   ;; fast buffer management
-   ("n" trem-next-user-buffer :norepeat t)
-   
-   ;; slow buffer and file management
-   ("SPC f" (("o" find-file)
-	     ("d" dired)
-	     ("l" list-buffers)
-	     ("k" kill-buffer)
-	     ("s" save-buffer)
-	     ("j" switch-to-buffer)
-	     ("i" save-some-buffers))
-    :name "file/buffer")
-   ))
+  ))
 
 
 ;; <<< END BINDINGS >>>
