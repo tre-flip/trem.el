@@ -19,8 +19,13 @@
 (require 'multiple-cursors)
 (require 'quail)
 
-;; <<< BEGIN MODE >>>
+;; <<< BEGIN SPECIAL VARIABLES >>>
 
+()
+
+;; <<< END SPECIAL VARIABLES >>>
+
+;; <<< BEGIN MODE >>>
 (defgroup trem nil
   "Introduce native modal editing of your own design"
   :group  'editing
@@ -30,9 +35,12 @@
   )
 
 ;;;###autoload
-
 (defvar trem-mode-map (make-sparse-keymap)
   "This is Trem mode map, used to translate your keys.")
+(define-prefix-command 'trem-mode-map-2)
+(define-prefix-command 'trem-mode-map-3)
+
+(defvar trem-cursor-type 'box)
 
 ;;;###autoload
 (define-minor-mode trem-mode
@@ -102,7 +110,7 @@ Otherwise use `list'."
 
 ;; <<< BEGIN UTILITIES >>>
 
-(defun trem-toggle-letter-case ()
+(defun trem-toggle-case ()
   "Toggle the letter case of current word or text selection.
 Always cycle in this order: Init Caps, ALL CAPS, all lower."
   (interactive)
@@ -986,6 +994,23 @@ If so, place cursor there, print error to message buffer."
   (trem-kill-forward)
   (trem-mode -1))
 
+(defun trem-help-map ()
+  "Display help for trem's single keystroke keymap"
+  (interactive)
+  (which-key-show-full-keymap 'trem-mode-map))
+
+(defun trem-help-map-2 ()
+  "Display help for trem's double keystroke keymap"
+  (which-key-show-full-keymap 'trem-mode-map-2))
+
+(defun trem-help-map-3 ()
+  "Display help for trem's triple keystroke keymap"
+  (which-key-show-full-keymap 'trem-mode-map-3))
+
+(defun trem-eval-buffer ()
+  (interactive)
+  )
+
 ;; <<< END UTILITIES >>>
 
 
@@ -999,73 +1024,89 @@ If so, place cursor there, print error to message buffer."
   (global-subword-mode 1)
 
   ;; use flet to shorten define-key
-  (cl-flet ((bnd (k d)
-		 (define-key trem-mode-keymap d)))
+  (cl-flet ((bnd-1 (k d)
+		   (define-key trem-mode-map (kbd k) d))
+	    (bnd-2 (k d)
+		   (define-key 'trem-mode-map-2 (kbd k) d))
+	    (bnd-3 (k d)
+		   (define-key 'trem-mode-map-3 (kbd k) d)))
 
     ;; ONE KEYSTROKE COMMANDS ;;
 
     ;; movement keys  
-    (bnd "i" previous-line)
-    (bnd "j" backward-char)
-    (bnd "k" next-line    )
-    (bnd "l" forward-char )
+    (bnd-1 "i" #'previous-line)
+    (bnd-1 "j" #'backward-char)
+    (bnd-1 "k" #'next-line    )
+    (bnd-1 "l" #'forward-char )
 
-    (bnd "m" trem-backward-left-bracket)
-    (bnd "." trem-forward-right-bracket)
-    (bnd "," avy-goto-word-1 )
+    (bnd-1 "m" #'trem-backward-left-bracket)
+    (bnd-1 "." #'trem-forward-right-bracket)
+    (bnd-1 "," #'avy-goto-word-1 )
 
-    (bnd "u" backward-word)
-    (bnd "o" forward-word)
+    (bnd-1 "u" #'backward-word)
+    (bnd-1 "o" #'forward-word)
 
-    (bnd "h" trem-beginning-of-line-or-block)
-    (bnd ";" trem-end-of-line-or-block)
+    (bnd-1 "h" #'trem-beginning-of-line-or-block)
+    (bnd-1 ";" #'trem-end-of-line-or-block)
     
     ;; fast marking
-    (bnd "d" trem-toggle-mark)
-    (bnd "e" er/expand-region)
-    (bnd "7" trem-mark-line)
-    (bnd "8" trem-mark-block)
-    (bnd "9" mark-whole-buffer)  
+    (bnd-1 "d" #'trem-toggle-mark)
+    (bnd-1 "e" #'er/expand-region)
+    (bnd-1 "7" #'trem-mark-line)
+    (bnd-1 "8" #'trem-mark-block)
+    (bnd-1 "9" #'mark-whole-buffer)  
     
     ;; recenter/focus, scrolling
-    (bnd "a" recenter-top-bottom)
-    (bnd "-" trem-scroll-up)
-    (bnd "=" trem-scroll-down)
+    (bnd-1 "a" #'recenter-top-bottom)
+    (bnd-1 "-" #'trem-scroll-up)
+    (bnd-1 "=" #'trem-scroll-down)
 
     ;; fast text manipulation
-    (bnd "/" )
-    (bnd "f" trem-kill-forward)
-    (bnd "s" trem-kill-backward)
-    (bnd "w" trem-kill-backward-bracket-text)
-    (bnd "r" trem-kill-forward-bracket-text )
-    (bnd "c" kill-ring-save)
-    (bnd "v" yank)
-    (bnd "t" undo)
-    (bnd "y" repeat)
-    (bnd "z" comment-region)
-
+    (bnd-1 "/" #'trem-change)
+    (bnd-1 "f" #'trem-kill-forward)
+    (bnd-1 "s" #'trem-kill-backward)
+    (bnd-1 "w" #'trem-kill-backward-bracket-text)
+    (bnd-1 "r" #'trem-kill-forward-bracket-text )
+    (bnd-1 "c" #'kill-ring-save)
+    (bnd-1 "v" #'yank)
+    (bnd-1 "t" #'undo)
+    (bnd-1 "y" #'repeat)
+    (bnd-1 "z" #'comment-region)
+    (bnd-1 "b" #'trem-toggle-case)
+    
     ;; fast execution
-    (bnd "x" execute-extended-command)
+    (bnd-1 "x" #'execute-extended-command)
     
     ;; fast window management
-    (bnd "1" make-frame)
-    (bnd "2" delete-window)
-    (bnd "3" other-window)
-    (bnd "4" split-window-right)
-    (bnd "5" split-window-below)
-    (bnd "6" delete-other-windows)
+    (bnd-1 "1" #'make-frame)
+    (bnd-1 "2" #'delete-window)
+    (bnd-1 "3" #'other-window)
+    (bnd-1 "4" #'split-window-right)
+    (bnd-1 "5" #'split-window-below)
+    (bnd-1 "6" #'delete-other-windows)
 
     ;; fast buffer management
-    (bnd "n" trem-next-user-buffer)
+    (bnd-1 "n" #'trem-next-user-buffer)
 
+    ;; help for this keymap
+    (bnd-1 "`" #'trem-help-map)
+    
     ;; unused keys are blocked
-    (bnd "b" ignore)
-    (bnd "p" ignore)
-    (bnd "q" ignore)
+    (bnd-1 "p" #'ignore)
+    (bnd-1 "q" #'ignore)
 
+    ;; prefix for 2-keystroke commands
+    (bnd-1 "SPC" 'trem-mode-map-2)
+    
     ;; TWO KEYSTROKE COMMANNDS ;;
 
-    (bnd )
+    (bnd-2 "`" #'trem-help-map-2)
+
+    ;; yank-pop
+    (bnd-2 "v" #'yank-pop)
+
+    ;; beginning/end of buffer
+    (bnd-2 "c" #')
     
     ))
 
