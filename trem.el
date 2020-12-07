@@ -868,6 +868,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "y" #'repeat)
     (bnd-1 "z" #'comment-region)
     (bnd-1 "b" #'trem-toggle-case)
+    (bnd-1 "0" #'trem-split-line-and-quit)
     
     ;; fast execution
     (bnd-1 "x" #'execute-extended-command)
@@ -890,6 +891,7 @@ If so, place cursor there, print error to message buffer."
 
     ;; isearch
     (bnd-1 "<f7>" #'isearch-forward)
+    (define-key isearch-mode-map (kbd "<f7>") #'isearch-cancel)
     (define-key isearch-mode-map (kbd "<f6>") #'isearch-repeat-backward)
     (define-key isearch-mode-map (kbd "<f8>") #'isearch-repeat-forward)
 
@@ -903,13 +905,15 @@ If so, place cursor there, print error to message buffer."
 
     (bnd-2 "`" #'trem-help-map-2)
     
-    ;; yank-pop
+    ;; text manipulation
     (bnd-2 "v" #'yank-pop)
+    (bnd-2 "r" #'query-replace)
 
     ;; advanced navigation
     (bnd-2 "i" #'beginning-of-buffer)
     (bnd-2 "k" #'end-of-buffer)
     (bnd-2 "l" #'goto-line)
+    (bnd-2 "u" #'trem-check-parens-balance)
     
     ;; uncomment region
     (bnd-2 "z" #'uncomment-region)

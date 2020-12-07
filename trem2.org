@@ -159,10 +159,9 @@
 ** UNDECIDED
    open kill ring
    list buffers
-   isearch forward
-   isearch backward
+
    regex replace
-   query replace
+
    mv/edit lines
    mc/insert numbers
    enlage window 
@@ -178,7 +177,36 @@
    space to newline
    shring whitespaces
    clean blank lines
-   check paren balance
+
+** FREE KEYS (SPC)
+   a
+   b
+   d
+   f
+   g
+   h
+   m
+   q
+
+   s
+
+   w
+   x
+   y
+   ,
+   .
+   0
+   1
+   2
+   3
+   4
+   5
+   6
+   7
+   8
+   9
+
+
    
 * TOOLS
   - phi-search
