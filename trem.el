@@ -83,8 +83,8 @@ Otherwise use `list'."
 ;; <<< END MODE >>>
 (defun trem-set-eval-functions (reg buf)
   "Sets functions for region and buffer evaluation/compilation"
-  (setq-local trem-eval-region-f reg
-	      trem-eval-buffer-f buf))
+  (setq-local trem-eval-region-f reg)
+  (setq-local trem-eval-buffer-f buf))
 
 (defun trem-toggle-case ()
   "Toggle the letter case of current word or text selection.
