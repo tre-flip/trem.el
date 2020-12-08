@@ -157,17 +157,16 @@
 
 
 ** UNDECIDED
+   hlt
    open kill ring
    list buffers
-
    regex replace
 
-   mv/edit lines
    mc/insert numbers
    enlage window 
    shrink window
    split line
-   split line and exit
+
    replace selection with killed text
    append to register
    paste from register
@@ -184,11 +183,11 @@
    d
    f
    g
-   h
-   m
+   
+
    q
 
-   s
+   
 
    w
    x

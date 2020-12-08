@@ -36,7 +36,6 @@
   :group  'editing
   :tag    "Trem"
   :prefix "trem-"
-  ;; :link   '(url-link :tag "GitHub" "https://github.com/mrkkrp/trem")
   )
 
 ;;;###autoload
@@ -176,7 +175,6 @@ Version 2019-06-13"
 
 (defun trem-shrink-whitespaces ()
   "Remove whitespaces around cursor to just one, or none.
-
 Shrink any neighboring space tab newline characters to 1 or none.
 If cursor neighbor has space/tab, toggle between 1 or 0 space.
 If cursor neighbor are newline, shrink them to just 1.
@@ -258,10 +256,7 @@ If already has just 1 whitespace, delete it."
 
 (defun trem-space-to-newline ()
   "Replace space sequence to a newline char.
-Works on current block or selection.
-
-URL `http://ergoemacs.org/emacs/emacs_space_to_newline.html'
-Version 2017-08-19"
+Works on current block or selection."
   (interactive)
   (let* ( $p1 $p2 )
     (if (use-region-p)
@@ -284,10 +279,7 @@ Version 2017-08-19"
 (defun trem-append-to-register-1 ()
   "Append current line or text selection to register 1.
 When no selection, append current line, with newline char.
-See also: `trem-paste-from-register-1', `copy-to-register'.
-
-URL `http://ergoemacs.org/emacs/emacs_copy_append.html'
-Version 2015-12-08 2020-09-08"
+See also: `trem-paste-from-register-1', `copy-to-register'."
   (interactive)
   (let ($p1 $p2)
     (if (use-region-p)
@@ -300,9 +292,7 @@ Version 2015-12-08 2020-09-08"
 
 (defun trem-paste-from-register-1 ()
   "Paste text from register 1.
-See also: `trem-copy-to-register-1', `insert-register'.
-URL `http://ergoemacs.org/emacs/elisp_copy-paste_register_1.html'
-Version 2015-12-08"
+See also: `trem-copy-to-register-1', `insert-register'."
   (interactive)
   (when (use-region-p)
     (delete-region (region-beginning) (region-end)))
@@ -315,68 +305,40 @@ Version 2015-12-08"
 
 
   "List of left bracket chars.")
-;; (progn
-;; ;; make trem-left-brackets based on trem-brackets
-;;   (setq trem-left-brackets '())
-;;   (dotimes ($x (- (length trem-brackets) 1))
-;;     (when (= (% $x 2) 0)
-;;       (push (char-to-string (elt trem-brackets $x))
-;;             trem-left-brackets)))
-;;   (setq trem-left-brackets (reverse trem-left-brackets)))
 
 (defvar trem-right-brackets '("\"" ")" "]" "}" ">" "〕" "】" "〗" "〉" "》" "」" "』" "”" "’" "›" "»" "〙")
   "list of right bracket chars.")
-;; (progn
-;;   (setq trem-right-brackets '())
-;;   (dotimes ($x (- (length trem-brackets) 1))
-;;     (when (= (% $x 2) 1)
-;;       (push (char-to-string (elt trem-brackets $x))
-;;             trem-right-brackets)))
-;;   (setq trem-right-brackets (reverse trem-right-brackets)))
 
 (defvar trem-punctuation-regex nil "A regex string for the purpose of moving cursor to a punctuation.")
 (setq trem-punctuation-regex "[!\?\"\.,`'#$%&*+:;=@^|~]+")
 
 (defun trem-forward-punct (&optional n)
   "Move cursor to the next occurrence of punctuation.
-The list of punctuations to jump to is defined by `trem-punctuation-regex'
-
-URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'
-Version 2017-06-26"
+The list of punctuations to jump to is defined by `trem-punctuation-regex'"
   (interactive "p")
   (re-search-forward trem-punctuation-regex nil t n))
 
 (defun trem-backward-punct (&optional n)
   "Move cursor to the previous occurrence of punctuation.
-See `trem-forward-punct'
-
-URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'
-Version 2017-06-26"
+See `trem-forward-punct'"
   (interactive "p")
   (re-search-backward trem-punctuation-regex nil t n))
 
 (defun trem-backward-left-bracket ()
   "Move cursor to the previous occurrence of left bracket.
-The list of brackets to jump to is defined by `trem-left-brackets'.
-URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
-Version 2015-10-01"
+The list of brackets to jump to is defined by `trem-left-brackets'."
   (interactive)
   (re-search-backward (regexp-opt trem-left-brackets) nil t))
 
 (defun trem-forward-right-bracket ()
   "Move cursor to the next occurrence of right bracket.
-The list of brackets to jump to is defined by `trem-right-brackets'.
-URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
-Version 2015-10-01"
+The list of brackets to jump to is defined by `trem-right-brackets'."
   (interactive)
   (re-search-forward (regexp-opt trem-right-brackets) nil t))
 
 (defun trem-goto-matching-bracket ()
   "Move cursor to the matching bracket.
-If cursor is not on a bracket, call `backward-up-list'.
-The list of brackets to jump to is defined by `trem-left-brackets' and `trem-right-brackets'.
-URL `http://ergoemacs.org/emacs/emacs_navigating_keys_for_brackets.html'
-Version 2016-11-22"
+If cursor is not on a bracket, call `backward-up-list'."
   (interactive)
   (if (nth 3 (syntax-ppss))
       (backward-up-list 1 'ESCAPE-STRINGS 'NO-SYNTAX-CROSSING)
@@ -391,18 +353,12 @@ Version 2016-11-22"
 
 (defun trem-change-bracket-pairs ( @from-chars @to-chars)
   "Change bracket pairs from one type to another.
-
 For example, change all parenthesis () to square brackets [].
-
 Works on selected text, or current text block.
-
 When called in lisp program, @from-chars or @to-chars is a string of bracket pair. eg \"(paren)\",  \"[bracket]\", etc.
 The first and last characters are used. (the middle is for convenience in ido selection.)
 If the string contains “,2”, then the first 2 chars and last 2 chars are used, for example  \"[[bracket,2]]\".
-If @to-chars is equal to string “none”, the brackets are deleted.
-
-URL `http://ergoemacs.org/emacs/elisp_change_brackets.html'
-Version 2020-11-01"
+If @to-chars is equal to string “none”, the brackets are deleted."
   (interactive
    (let (($bracketsList
           '("(paren)"
@@ -665,19 +621,72 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
   (interactive)
   (backward-kill-sexp))
 
+(defun trem-delete-surround-at-point--find-brackets (pos)
+  "Return a pair of buffer positions for the opening & closing bracket positions.
+Or nil when nothing is found."
+  (save-excursion
+    (goto-char pos)
+    (when
+        (or
+         (when
+             (and
+              (eq (syntax-class (syntax-after pos)) 4)
+              (= (logand (skip-syntax-backward "/\\") 1) 0))
+           (forward-char 1)
+           (if (and (ignore-errors (backward-up-list 1) t) (eq (point) pos))
+               t
+             (goto-char pos)
+             nil))
+         (ignore-errors (backward-up-list 1) t))
+      (list (point)
+            (progn
+              (forward-list)
+              (1- (point)))))))
+
+(defun trem-delete-surround-at-point ()
+  "Returns t if brackets are successfully deleted, nil if no brackets at point."
+  (interactive)
+  (let ((range (trem-delete-surround-at-point--find-brackets (point))))
+    (unless range
+      (user-error "No surrounding brackets"))
+    (pcase-let ((`(,beg ,end) range))
+      (let ((lines (count-lines beg end))
+            (beg-char (char-after beg))
+            (end-char (char-after end)))
+        (save-excursion
+          (goto-char end)
+          (delete-char 1)
+          (goto-char beg)
+          (delete-char 1))
+        (message
+         "Delete surrounding \"%c%c\"%s" beg-char end-char
+         (if (> lines 1)
+             (format " across %d lines" lines)
+           ""))
+	))
+    ))
+
 (defun trem-kill-backward ()
   "Kill selected text or char backward or bracket pair."
   (interactive)
   (if (use-region-p)
       (kill-region (region-beginning) (region-end))
-    (delete-char -1)))
+    (progn
+      (backward-char)
+      (condition-case nil
+	  (trem-delete-surround-at-point)
+	(error (delete-char 1))))))
 
 (defun trem-kill-forward ()
   "Kill selected text or char forward or bracket pair."
   (interactive)
   (if (use-region-p)
 	(kill-region (region-beginning) (region-end))
-    (delete-char 1)))
+    (progn
+      (condition-case nil
+	  (trem-delete-surround-at-point)
+	(error (delete-char 1))))))
+
 
 (defun trem-beginning-of-line-or-block ()
   "Move cursor to beginning of line or previous paragraph.
