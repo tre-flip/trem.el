@@ -21,8 +21,8 @@
 
 ;; <<< BEGIN SPECIAL VARIABLES >>>
 
-(defvar-local trem-eval-buffer-f #'ignore)
-(defvar-local trem-eval-region-f #'ignore)
+(defvar-local trem-eval-buffer-f #'eval-buffer)
+(defvar-local trem-eval-region-f #'eval-region)
 (defvar-local trem-shell "bash")
 
 ;; <<< END SPECIAL VARIABLES >>>
@@ -81,7 +81,10 @@ Otherwise use `list'."
 (advice-add 'quail-input-method :around #'trem--input-function-advice)
 
 ;; <<< END MODE >>>
-
+(defun trem-set-eval-functions (reg buf)
+  "Sets functions for region and buffer evaluation/compilation"
+  (setq-local trem-eval-region-f reg
+	      trem-eval-buffer-f buf))
 
 (defun trem-toggle-case ()
   "Toggle the letter case of current word or text selection.
@@ -872,6 +875,7 @@ If so, place cursor there, print error to message buffer."
     
     ;; fast execution
     (bnd-1 "x" #'execute-extended-command)
+    (bnd-1 "g" #'keyboard-quit)
     
     ;; fast window management
     (bnd-1 "1" #'make-frame)
