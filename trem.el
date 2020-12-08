@@ -7,7 +7,7 @@
 ;; MIT License
 
 ;;; Commentary:
-;; Read the source. Based on  xah-fly-keys, ryo-modal, trem.
+;; Read the source. Based on  xah-fly-keys, ryo-modal, modalka, kakoune.el.
 
 ;;; Code:
 (require 'cl-lib)
@@ -24,6 +24,8 @@
 (defvar-local trem-eval-buffer-f #'eval-buffer)
 (defvar-local trem-eval-region-f #'eval-region)
 (defvar-local trem-shell "bash")
+
+(defvar trem-excluded-modes nil)
 
 ;; <<< END SPECIAL VARIABLES >>>
 
@@ -51,10 +53,7 @@
 With a prefix argument ARG, enable `trem-mode' if ARG is
 positive, and disable it otherwise.  If called from Lisp, enable
 the mode if ARG is omitted or NIL, and toggle it if ARG is
-`toggle'.
-This minor mode setups translation of key bindings according to
-configuration created previously with `trem-define-key' and
-`trem-define-keys'."
+`toggle'."
   nil "CMD" trem-mode-map
   (setq-local cursor-type
               (if trem-mode
@@ -809,6 +808,17 @@ If so, place cursor there, print error to message buffer."
   (interactive)
   (split-line)
   (trem-mode -1))
+
+(defun trem-toggle-highlight ()
+  (interactive)
+  (let ((!overlays (overlays-at (point))))
+    (if !overlays
+	(progn
+	  (message "found overlay")
+	  (mapcar  #'delete-overlay !overlays))
+      (overlay-put (make-overlay (region-beginning)
+				 (region-end))
+		   'face 'highlight))))
 ;; <<< END UTILITIES >>>
 
 
@@ -912,7 +922,10 @@ If so, place cursor there, print error to message buffer."
     ;; text manipulation
     (bnd-2 "v" #'yank-pop)
     (bnd-2 "r" #'query-replace)
-
+    (bnd-2 "m" #'mc/edit-beginnings-of-lines)
+    (bnd-2 "h" #'trem-toggle-highlight)
+    
+    
     ;; advanced navigation
     (bnd-2 "i" #'beginning-of-buffer)
     (bnd-2 "k" #'end-of-buffer)
@@ -935,7 +948,8 @@ If so, place cursor there, print error to message buffer."
     ;; shells
     (bnd-2 "p" #'trem-shell-pipe)
     (bnd-2 "t" #'eshell)
-    
+
+   
     ))
 
 
