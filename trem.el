@@ -620,6 +620,7 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
 (defun trem-kill-backward-bracket-text ()
   (interactive)
   (backward-kill-sexp))
+
 (defun trem-kill-backward ()
   "Kill selected text or char backward or bracket pair."
   (interactive)
@@ -628,9 +629,11 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
     (kill-region (region-beginning) (region-end)))
    ((or (looking-back (regexp-opt trem-left-brackets))
 	(looking-back (regexp-opt trem-right-brackets)))
-    (progn
-      (backward-char)
-      (trem-delete-pair)))
+    (condition-case nil
+	(progn
+	  (backward-char)
+	  (trem-delete-pair))
+      ((error) (delete-char 1))))
    (t (delete-char -1))))
   
 (defun trem-kill-forward ()
@@ -641,12 +644,12 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
     (kill-region (region-beginning) (region-end)))
    ((or (looking-at (regexp-opt trem-left-brackets))
 	(looking-at (regexp-opt trem-right-brackets)))
-    (progn
-      (trem-delete-pair)))
+    (condition-case nil
+	(trem-delete-pair)
+      ((error) (delete-char 1))))
    (t (delete-char 1))))
-
+  
 (defun trem-delete-pair ()
-  "Delete pair at point."
   (interactive)
   (let ((!spos (point)))
     (trem-goto-matching-bracket)
