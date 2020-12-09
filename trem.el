@@ -79,13 +79,12 @@ This is used by `trem-global-mode'."
 (defun trem-shell-pipe ()
   "Run a shell command on each of the current regions separately and replace the current regions with its output."
   (interactive)
-  (let ((command (read-string "Pipe: ")))
-    (mc/for-each-cursor-ordered
+  (mc/for-each-cursor-ordered
      (shell-command-on-region (mc/cursor-beg cursor)
                               (mc/cursor-end cursor)
-                              command
+                              trem-shell
                               nil
-                              1))))
+                              1)))
 
 (defun trem-set-eval-functions (reg buf)
   "Sets functions for region and buffer evaluation/compilation"
