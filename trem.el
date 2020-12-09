@@ -344,7 +344,7 @@ If cursor is not on a bracket, call `backward-up-list'."
       (backward-up-list 1 'ESCAPE-STRINGS 'NO-SYNTAX-CROSSING)
     (cond
      ((eq (char-after) ?\") (forward-sexp))
-     ((eq (char-before) ?\") (backward-sexp ))
+     ((eq (char-before) ?\") (backward-sexp))
      ((looking-at (regexp-opt trem-left-brackets))
       (forward-sexp))
      ((looking-back (regexp-opt trem-right-brackets) (max (- (point) 1) 1))
@@ -620,73 +620,43 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
 (defun trem-kill-backward-bracket-text ()
   (interactive)
   (backward-kill-sexp))
-
-(defun trem-delete-surround-at-point--find-brackets (pos)
-  "Return a pair of buffer positions for the opening & closing bracket positions.
-Or nil when nothing is found."
-  (save-excursion
-    (goto-char pos)
-    (when
-        (or
-         (when
-             (and
-              (eq (syntax-class (syntax-after pos)) 4)
-              (= (logand (skip-syntax-backward "/\\") 1) 0))
-           (forward-char 1)
-           (if (and (ignore-errors (backward-up-list 1) t) (eq (point) pos))
-               t
-             (goto-char pos)
-             nil))
-         (ignore-errors (backward-up-list 1) t))
-      (list (point)
-            (progn
-              (forward-list)
-              (1- (point)))))))
-
-(defun trem-delete-surround-at-point ()
-  "Returns t if brackets are successfully deleted, nil if no brackets at point."
-  (interactive)
-  (let ((range (trem-delete-surround-at-point--find-brackets (point))))
-    (unless range
-      (user-error "No surrounding brackets"))
-    (pcase-let ((`(,beg ,end) range))
-      (let ((lines (count-lines beg end))
-            (beg-char (char-after beg))
-            (end-char (char-after end)))
-        (save-excursion
-          (goto-char end)
-          (delete-char 1)
-          (goto-char beg)
-          (delete-char 1))
-        (message
-         "Delete surrounding \"%c%c\"%s" beg-char end-char
-         (if (> lines 1)
-             (format " across %d lines" lines)
-           ""))
-	))
-    ))
-
 (defun trem-kill-backward ()
   "Kill selected text or char backward or bracket pair."
   (interactive)
-  (if (use-region-p)
-      (kill-region (region-beginning) (region-end))
+  (cond
+   ((use-region-p)
+    (kill-region (region-beginning) (region-end)))
+   ((or (looking-back (regexp-opt trem-left-brackets))
+	(looking-back (regexp-opt trem-right-brackets)))
     (progn
       (backward-char)
-      (condition-case nil
-	  (trem-delete-surround-at-point)
-	(error (delete-char 1))))))
-
+      (trem-delete-pair)))
+   (t (delete-char -1))))
+  
 (defun trem-kill-forward ()
-  "Kill selected text or char forward or bracket pair."
+  "Kill selected text or char backward or bracket pair."
   (interactive)
-  (if (use-region-p)
-	(kill-region (region-beginning) (region-end))
+  (cond
+   ((use-region-p)
+    (kill-region (region-beginning) (region-end)))
+   ((or (looking-at (regexp-opt trem-left-brackets))
+	(looking-at (regexp-opt trem-right-brackets)))
     (progn
-      (condition-case nil
-	  (trem-delete-surround-at-point)
-	(error (delete-char 1))))))
+      (trem-delete-pair)))
+   (t (delete-char 1))))
 
+(defun trem-delete-pair ()
+  "Delete pair at point."
+  (interactive)
+  (let ((!spos (point)))
+    (trem-goto-matching-bracket)
+    (if (< (point) !spos)
+	(progn
+	  (delete-pair)
+	  (goto-char (- !spos 2)))
+      (progn
+	(goto-char !spos)
+	(delete-pair)))))
 
 (defun trem-beginning-of-line-or-block ()
   "Move cursor to beginning of line or previous paragraph.
