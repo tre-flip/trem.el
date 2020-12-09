@@ -71,14 +71,22 @@ This is used by `trem-global-mode'."
   trem-mode
   trem--maybe-activate)
 
-(defun trem--input-function-advice (fnc key)
-  "Call FNC with KEY as argument only when `trem-mode' is disabled.
-Otherwise use `list'."
-  (funcall (if trem-mode #'list fnc) key))
-
-(advice-add 'quail-input-method :around #'trem--input-function-advice)
-
 ;; <<< END MODE >>>
+
+
+;; <<< BEGIN UTILITIES >>>
+
+(defun trem-shell-pipe ()
+  "Run a shell command on each of the current regions separately and replace the current regions with its output."
+  (interactive)
+  (let ((command (read-string "Pipe: ")))
+    (mc/for-each-cursor-ordered
+     (shell-command-on-region (mc/cursor-beg cursor)
+                              (mc/cursor-end cursor)
+                              command
+                              nil
+                              1))))
+
 (defun trem-set-eval-functions (reg buf)
   "Sets functions for region and buffer evaluation/compilation"
   (setq-local trem-eval-region-f reg)
