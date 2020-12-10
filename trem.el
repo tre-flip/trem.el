@@ -928,7 +928,8 @@ If so, place cursor there, print error to message buffer."
 
     ;; isearch
     (bnd-1 "<f7>" #'isearch-forward)
-    (define-key isearch-mode-map (kbd "<f7>") #'isearch-cancel)
+    (define-key isearch-mode-map (kbd "<f7>") #'isearch-done)
+    (define-key isearch-mode-map (kbd "S-<f7>") #'isearch-cancel)
     (define-key isearch-mode-map (kbd "<f6>") #'isearch-repeat-backward)
     (define-key isearch-mode-map (kbd "<f8>") #'isearch-repeat-forward)
 
