@@ -54,10 +54,9 @@ positive, and disable it otherwise.  If called from Lisp, enable
 the mode if ARG is omitted or NIL, and toggle it if ARG is
 `toggle'."
   nil "CMD" trem-mode-map
-  (setq-local cursor-type
-              (if trem-mode
-                  trem-cursor-type
-                (default-value 'cursor-type))))
+  (if trem-mode
+      (setq-local cursor-type trem-cursor-type)
+    (setq-local cursor-type (default-value 'cursor-type))))
 
 (defun trem--maybe-activate ()
   "Activate `trem-mode' if current buffer is not minibuffer or blacklisted.
