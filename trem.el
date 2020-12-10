@@ -74,7 +74,7 @@ This is used by `trem-global-mode'."
 
 
 ;; <<< BEGIN UTILITIES >>>
-(defun eshell/clear ()
+(defun eshell-clear ()
   "Clear the eshell buffer."
   (let ((inhibit-read-only t))
     (erase-buffer)
@@ -503,10 +503,7 @@ If @to-chars is equal to string “none”, the brackets are deleted."
 
 
 (defun trem-delete-blank-lines ()
-  "Delete all newline around cursor.
-
-URL `http://ergoemacs.org/emacs/emacs_shrink_whitespace.html'
-Version 2018-04-02"
+  "Delete all newline around cursor."
   (interactive)
   (let ($p3 $p4)
           (skip-chars-backward "\n")
@@ -515,6 +512,38 @@ Version 2018-04-02"
           (setq $p4 (point))
           (delete-region $p3 $p4)))
 
+(defun trem-reformat-to-multi-lines ( &optional @begin @end @min-length)
+  "Replace spaces by a newline at places so lines are not long.
+When there is a text selection, act on the selection, else, act on a text block separated by blank lines.
+If `universal-argument' is called first, use the number value for min length of line. By default, it's 70."
+  (interactive)
+  (let (
+        $p1 $p2
+        ($blanks-regex "\n[ \t]*\n")
+        ($minlen (if @min-length
+                     @min-length
+                   (if current-prefix-arg (prefix-numeric-value current-prefix-arg) fill-column))))
+    (if (and  @begin @end)
+        (setq $p1 @begin $p2 @end)
+      (if (use-region-p)
+          (progn (setq $p1 (region-beginning) $p2 (region-end)))
+        (save-excursion
+          (if (re-search-backward $blanks-regex nil "move")
+              (progn (re-search-forward $blanks-regex)
+                     (setq $p1 (point)))
+            (setq $p1 (point)))
+          (if (re-search-forward $blanks-regex nil "move")
+              (progn (re-search-backward $blanks-regex)
+                     (setq $p2 (point)))
+            (setq $p2 (point))))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (goto-char (point-min))
+        (while
+            (re-search-forward " +" nil "move")
+          (when (> (- (point) (line-beginning-position)) $minlen)
+            (replace-match "\n" )))))))
 
 (defun trem-reformat-lines ( &optional @length)
   "Reformat current text block or selection into short lines or 1 long line.
@@ -800,7 +829,7 @@ If so, place cursor there, print error to message buffer."
 (defun trem-split-line-and-quit ()
   (interactive)
   (split-line)
-  (trem-mode -1))
+  (trem-global-mode -1))
 
 (defun trem-toggle-highlight ()
   (interactive)
@@ -875,6 +904,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "z" #'comment-region)
     (bnd-1 "b" #'trem-toggle-case)
     (bnd-1 "0" #'trem-split-line-and-quit)
+    (bnd-1 "p" #'trem-replace-selection)
     
     ;; fast execution
     (bnd-1 "x" #'execute-extended-command)
@@ -903,7 +933,7 @@ If so, place cursor there, print error to message buffer."
     (define-key isearch-mode-map (kbd "<f8>") #'isearch-repeat-forward)
 
     ;; unused keys are blocked
-    (bnd-1 "p" #'ignore)
+
 
     ;; prefix for 2-keystroke commands
     (bnd-1 "SPC" 'trem-mode-map-2)
@@ -917,7 +947,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-2 "r" #'query-replace)
     (bnd-2 "m" #'mc/edit-beginnings-of-lines)
     (bnd-2 "h" #'trem-toggle-highlight)
-    
+    (bnd-2 "7" #'trem-reformat-lines)
     
     ;; advanced navigation
     (bnd-2 "i" #'beginning-of-buffer)
@@ -942,7 +972,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-2 "p" #'trem-shell-pipe)
     (bnd-2 "t" #'eshell)
 
-   
+    
     ))
 
 
