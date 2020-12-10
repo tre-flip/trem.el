@@ -74,6 +74,11 @@ This is used by `trem-global-mode'."
 
 
 ;; <<< BEGIN UTILITIES >>>
+(defun eshell/clear ()
+  "Clear the eshell buffer."
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (eshell-send-input)))
 
 (defun trem-shell-pipe ()
   "Run a shell command on each of the current regions separately and replace the current regions with its output."
