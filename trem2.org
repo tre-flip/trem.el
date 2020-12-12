@@ -173,8 +173,6 @@
    clear register
    replace brackets
    reformat lines
-   space to newline
-   shring whitespaces
    clean blank lines
 
 ** FREE KEYS (SPC)
@@ -183,12 +181,7 @@
    d
    f
    g
-   
-
    q
-
-   
-
    w
    x
    y

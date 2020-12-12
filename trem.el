@@ -53,7 +53,7 @@ With a prefix argument ARG, enable `trem-mode' if ARG is
 positive, and disable it otherwise.  If called from Lisp, enable
 the mode if ARG is omitted or NIL, and toggle it if ARG is
 `toggle'."
-  nil "CMD" trem-mode-map
+  nil " CMD" trem-mode-map
   (if trem-mode
       (setq-local cursor-type trem-cursor-type)
     (setq-local cursor-type (default-value 'cursor-type))))
@@ -801,7 +801,7 @@ If so, place cursor there, print error to message buffer."
   "Kill forward and exit CMD mode"
   (interactive)
   (trem-kill-forward)
-  (trem-mode -1))
+  (trem-global-mode -1))
 
 (defun trem-help-map ()
   "Display help for trem's single keystroke keymap"
