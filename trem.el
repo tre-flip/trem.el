@@ -581,17 +581,19 @@ If `universal-argument' is called first, use the number value for min length of 
           (trem-reformat-whitespaces-to-one-space $p1 $p2)))
       (put this-command 'is-longline-p (not is-longline-p)))))
 
-(defun trem-user-buffer-q ()
+(defun trem-user-buffer-p (bname)
   "Return t if current buffer is a user buffer, else nil.
 Typically, if buffer name starts with *, it's not considered a user buffer.
 This function is used by buffer switching command and close buffer command, so that next buffer shown is a user buffer.
-You can override this function to get your idea of “user buffer”.
-Version 2016-06-18"
+REWRITE IT!"
   (interactive)
   (cond
-   ((string-equal "*" (substring (buffer-name) 0 1)) nil)
-   ((string-equal major-mode "dired-mode") nil)
-   ((string-equal major-mode "eww-mode") nil)
+   ((string-equal "*eshell*" bname) t)
+   ((string-equal "*ansi-term*" bname) t)
+   ((string-equal "*scratch*" bname) t)
+   ((string-equal "*term*" bname) t)
+   ((string-equal "*" (substring bname 0 1)) nil)
+   ((string-equal " *" (substring bname 0 2)) nil)
    (t t)))
 
 (defun trem-next-user-buffer ()
@@ -601,7 +603,7 @@ Version 2016-06-18"
   (next-buffer)
   (let ((i 0))
     (while (< i 20)
-      (if (not (trem-user-buffer-q))
+      (if (not (trem-user-buffer-p (buffer-name)))
           (progn (next-buffer)
                  (setq i (1+ i)))
         (progn (setq i 100))))))
@@ -613,7 +615,7 @@ Version 2016-06-18"
   (previous-buffer)
   (let ((i 0))
     (while (< i 20)
-      (if (not (trem-user-buffer-q))
+      (if (not (trem-user-buffer-p (buffer-name)))
           (progn (previous-buffer)
                  (setq i (1+ i)))
         (progn (setq i 100))))))
@@ -841,6 +843,16 @@ If so, place cursor there, print error to message buffer."
       (overlay-put (make-overlay (region-beginning)
 				 (region-end))
 		   'face 'highlight))))
+
+(defun trem-choose-buffer (buf)
+  (interactive
+   (list
+    (ido-completing-read "Goto buffer: "
+			 (remove-if-not #'trem-user-buffer-p
+					(mapcar (lambda (b) (buffer-name b))
+						(buffer-list))))))
+  (switch-to-buffer buf))
+
 ;; <<< END UTILITIES >>>
 
 
@@ -968,6 +980,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-2 "n" #'trem-next-emacs-buffer)
     (bnd-2 "j" #'switch-to-buffer)
     (bnd-2 "s" #'save-buffer)
+    (bnd-2 "f" #'buffer-menu)
     
     ;; shells
     (bnd-2 "p" #'trem-shell-pipe)
