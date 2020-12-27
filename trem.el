@@ -985,7 +985,7 @@ If so, place cursor there, print error to message buffer."
     ;; shells
     (bnd-2 "p" #'trem-shell-pipe)
     (bnd-2 "t" #'eshell)
-
+    (bnd-2 "y" #'(lambda () (interactive) (ansi-term "/bin/bash")))
     
     ))
 
