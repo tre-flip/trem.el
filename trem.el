@@ -74,6 +74,12 @@ This is used by `trem-global-mode'."
 
 
 ;; <<< BEGIN UTILITIES >>>
+(defun trem-find-file ()
+  (interactive)
+  (if (region-active-p)
+      (find-file-at-point)
+    (command-execute #'find-file)))
+
 (defun eshell-clear ()
   "Clear the eshell buffer."
   (let ((inhibit-read-only t))
@@ -853,6 +859,15 @@ If so, place cursor there, print error to message buffer."
 						(buffer-list))))))
   (switch-to-buffer buf))
 
+(defvar trem-key-pairs (mapcar* 'cons
+			"qwertyuiop[]asdfghjkl;'zxcvbnm,.QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>#"	
+			"йцукенгшщзхъфывапролджэячсмитьбюЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖ\ЭЯЧСМИТЬБЮ№"))
+
+(defun trem-bind-rus (m k d)
+  (let ((c (cdr (assoc (aref k 0) trem-key-pairs))))
+    (when c
+      (define-key m (kbd (char-to-string c)) d))))
+
 ;; <<< END UTILITIES >>>
 
 
@@ -867,11 +882,14 @@ If so, place cursor there, print error to message buffer."
 
   ;; use flet to shorten define-key
   (cl-flet ((bnd-1 (k d)
-		   (define-key trem-mode-map (kbd k) d))
+		   (define-key trem-mode-map (kbd k) d)
+		   (trem-bind-rus trem-mode-map k d))
 	    (bnd-2 (k d)
-		   (define-key 'trem-mode-map-2 (kbd k) d))
+		   (define-key 'trem-mode-map-2 (kbd k) d)
+		   (trem-bind-rus 'trem-mode-map-2 k d))
 	    (bnd-3 (k d)
-		   (define-key 'trem-mode-map-3 (kbd k) d)))
+		   (define-key 'trem-mode-map-3 k d)
+		   (trem-bind-rus 'trem-mode-map-3 k d)))
 
     ;; ONE KEYSTROKE COMMANDS ;;
 
@@ -976,7 +994,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-2 "e" #'trem-eval-region)
     
     ;; buffer/file management
-    (bnd-2 "o" #'find-file)
+    (bnd-2 "o" #'trem-find-file)
     (bnd-2 "n" #'trem-next-emacs-buffer)
     (bnd-2 "j" #'switch-to-buffer)
     (bnd-2 "s" #'save-buffer)
