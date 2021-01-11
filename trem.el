@@ -859,7 +859,7 @@ If so, place cursor there, print error to message buffer."
 						(buffer-list))))))
   (switch-to-buffer buf))
 
-(defvar trem-key-pairs (mapcar* 'cons
+(defvar trem-key-pairs (cl-mapcar 'cons
 			"qwertyuiop[]asdfghjkl;'zxcvbnm,.QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>#"	
 			"йцукенгшщзхъфывапролджэячсмитьбюЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖ\ЭЯЧСМИТЬБЮ№"))
 
