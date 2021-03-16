@@ -14,10 +14,11 @@
 (require 'org-macs)
 (require 'seq)
 (require 'avy)
+(require 'helm)
+(require 'helm-gtags)
 (require 'expand-region)
 (require 'the-org-mode-expansions)
 (require 'multiple-cursors)
-(require 'quail)
 
 ;; <<< BEGIN SPECIAL VARIABLES >>>
 
@@ -41,8 +42,9 @@
 ;;;###autoload
 (defvar trem-mode-map (make-sparse-keymap)
   "This is Trem mode map, used to translate your keys.")
-(define-prefix-command 'trem-mode-map-2)
-(define-prefix-command 'trem-mode-map-3)
+(define-prefix-command 'trem-mode-map-leadkey)
+;; TODO: rewrite as a local keymap variable, that can be reassigned when a mode is switched
+(define-prefix-command 'trem-mode-map-local)
 
 (defvar trem-cursor-type 'box)
 
@@ -819,7 +821,7 @@ If so, place cursor there, print error to message buffer."
 (defun trem-help-map-2 ()
   "Display help for trem's double keystroke keymap"
   (interactive)
-  (which-key-show-full-keymap 'trem-mode-map-2))
+  (which-key-show-full-keymap 'trem-mode-map-leadkey))
 
 (defun trem-help-map-3 ()
   "Display help for trem's triple keystroke keymap"
@@ -885,8 +887,8 @@ If so, place cursor there, print error to message buffer."
 		   (define-key trem-mode-map (kbd k) d)
 		   (trem-bind-rus trem-mode-map k d))
 	    (bnd-2 (k d)
-		   (define-key 'trem-mode-map-2 (kbd k) d)
-		   (trem-bind-rus 'trem-mode-map-2 k d))
+		   (define-key 'trem-mode-map-leadkey (kbd k) d)
+		   (trem-bind-rus 'trem-mode-map-leadkey k d))
 	    (bnd-3 (k d)
 		   (define-key 'trem-mode-map-3 k d)
 		   (trem-bind-rus 'trem-mode-map-3 k d)))
@@ -908,7 +910,7 @@ If so, place cursor there, print error to message buffer."
 
     (bnd-1 "h" #'trem-beginning-of-line-or-block)
     (bnd-1 ";" #'trem-end-of-line-or-block)
-    
+
     ;; fast marking
     (bnd-1 "d" #'trem-toggle-mark)
     (bnd-1 "e" #'er/expand-region)
@@ -916,7 +918,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "8" #'trem-mark-block)
     (bnd-1 "9" #'mark-whole-buffer)  
     
-    ;; recenter/focus, scrolling
+    ;; recenter/focus, alt scrolling
     (bnd-1 "a" #'recenter-top-bottom)
     (bnd-1 "-" #'trem-scroll-down)
     (bnd-1 "=" #'trem-scroll-up)
@@ -933,11 +935,11 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "y" #'repeat)
     (bnd-1 "z" #'comment-region)
     (bnd-1 "b" #'trem-toggle-case)
-    (bnd-1 "0" #'trem-split-line-and-quit)
+    (bnd-1 "0" #'helm-occur)
     (bnd-1 "p" #'trem-replace-selection)
     
     ;; fast execution
-    (bnd-1 "x" #'execute-extended-command)
+    (bnd-1 "x" #'helm-M-x)
     (bnd-1 "g" #'keyboard-quit)
     
     ;; fast window management
@@ -950,13 +952,13 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "<f5>" #'kill-buffer-and-window)
 
     ;; fast buffer management
-    (bnd-1 "n" #'trem-next-user-buffer)
     (bnd-1 "q" #'kill-buffer)
     
     ;; help for this keymap
     (bnd-1 "`" #'trem-help-map)
 
-    ;; isearch
+    ;; search
+    (bnd-1 "n" #'helm-occur)
     (bnd-1 "<f7>" #'isearch-forward)
     (define-key isearch-mode-map (kbd "<f7>") #'isearch-done)
     (define-key isearch-mode-map (kbd "S-<f7>") #'isearch-cancel)
@@ -967,7 +969,7 @@ If so, place cursor there, print error to message buffer."
 
 
     ;; prefix for 2-keystroke commands
-    (bnd-1 "SPC" 'trem-mode-map-2)
+    (bnd-1 "SPC" 'trem-mode-map-leadkey)
     
     ;; TWO KEYSTROKE COMMANNDS ;;
 
@@ -994,7 +996,7 @@ If so, place cursor there, print error to message buffer."
     (bnd-2 "e" #'trem-eval-region)
     
     ;; buffer/file management
-    (bnd-2 "o" #'trem-find-file)
+    (bnd-2 "o" #'helm-find-files)
     (bnd-2 "n" #'trem-next-emacs-buffer)
     (bnd-2 "j" #'switch-to-buffer)
     (bnd-2 "s" #'save-buffer)
