@@ -82,12 +82,6 @@ This is used by `trem-global-mode'."
       (find-file-at-point)
     (command-execute #'find-file)))
 
-(defun eshell-clear ()
-  "Clear the eshell buffer."
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (eshell-send-input)))
-
 (defun trem-shell-pipe ()
   "Run a shell command on each of the current regions separately and replace the current regions with its output."
   (interactive)
@@ -1005,7 +999,7 @@ If so, place cursor there, print error to message buffer."
     ;; shells
     (bnd-2 "p" #'trem-shell-pipe)
     (bnd-2 "t" #'eshell)
-    (bnd-2 "y" #'(lambda () (interactive) (ansi-term "/bin/bash")))
+    (bnd-2 "y" #'(lambda () (interactive) (vterm)))
     
     ))
 
