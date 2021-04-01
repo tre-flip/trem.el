@@ -76,11 +76,24 @@ This is used by `trem-global-mode'."
 
 
 ;; <<< BEGIN UTILITIES >>>
-(defun trem-find-file ()
+(defun trem-append-at-eol ()
+  "Go to end of line, format it to just one space at the end and leave CMD mode."
   (interactive)
-  (if (region-active-p)
-      (find-file-at-point)
-    (command-execute #'find-file)))
+  (end-of-line)
+  (just-one-space)
+  (trem-global-mode -1))
+
+(defun trem-open-above ()
+  (interactive)
+  (beginning-of-line)
+  (open-line 1)
+  (trem-global-mode -1))
+(defun trem-open-below ()
+  "Go to end of line, then newline-and-indent."
+  (interactive)
+  (move-end-of-line nil)
+  (newline-and-indent)
+  (trem-global-mode -1))
 
 (defun trem-shell-pipe ()
   "Run a shell command on each of the current regions separately and replace the current regions with its output."
@@ -124,19 +137,6 @@ Always cycle in this order: Init Caps, ALL CAPS, all lower."
       (downcase-region $p1 $p2)
       (put this-command 'state 0)))))
 
-(defun trem-mark-block ()
-  "Select the current/next block of text between blank lines.
-If region is active, extend selection downward by block."
-  (interactive)
-  (if (use-region-p)
-      (re-search-forward "\n[ \t]*\n" nil "move")
-    (progn
-      (skip-chars-forward " \n\t")
-      (when (re-search-backward "\n[ \t]*\n" nil "move")
-        (re-search-forward "\n[ \t]*\n"))
-      (push-mark (point) t t)
-      (re-search-forward "\n[ \t]*\n" nil "move"))))
-
 (defun trem-mark-line ()
   "Select current line, or select next line if called again."
   (interactive)
@@ -148,7 +148,6 @@ If region is active, extend selection downward by block."
       (end-of-line)
       (set-mark (line-beginning-position)))))
 
-;; extend it to scroll arbitrary amount of lines
 (defun trem-scroll-up ()
   (interactive)
   (scroll-up 2))
@@ -174,72 +173,6 @@ If region is active, extend selection downward by block."
           (skip-chars-forward "\n")
           (setq $p4 (point))
           (delete-region $p3 $p4)))
-
-(defun trem-fly-delete-spaces ()
-  "Delete space, tab, IDEOGRAPHIC SPACE (U+3000) around cursor.
-Version 2019-06-13"
-  (interactive)
-  (let (p1 p2)
-    (skip-chars-forward " \t　")
-    (setq p2 (point))
-    (skip-chars-backward " \t　")
-    (setq p1 (point))
-    (delete-region p1 p2)))
-
-(defun trem-shrink-whitespaces ()
-  "Remove whitespaces around cursor to just one, or none.
-Shrink any neighboring space tab newline characters to 1 or none.
-If cursor neighbor has space/tab, toggle between 1 or 0 space.
-If cursor neighbor are newline, shrink them to just 1.
-If already has just 1 whitespace, delete it."
-  (interactive)
-  (let* (
-         ($eol-count 0)
-         ($p0 (point))
-         $p1 ; whitespace begin
-         $p2 ; whitespace end
-         ($charBefore (char-before))
-         ($charAfter (char-after ))
-         ($space-neighbor-p (or (eq $charBefore 32) (eq $charBefore 9) (eq $charAfter 32) (eq $charAfter 9)))
-         $just-1-space-p
-         )
-    (skip-chars-backward " \n\t　")
-    (setq $p1 (point))
-    (goto-char $p0)
-    (skip-chars-forward " \n\t　")
-    (setq $p2 (point))
-    (goto-char $p1)
-    (while (search-forward "\n" $p2 t )
-      (setq $eol-count (1+ $eol-count)))
-    (setq $just-1-space-p (eq (- $p2 $p1) 1))
-    (goto-char $p0)
-    (cond
-     ((eq $eol-count 0)
-      (if $just-1-space-p
-          (trem-fly-delete-spaces)
-        (progn (trem-fly-delete-spaces)
-               (insert " ")))
-      )
-     ((eq $eol-count 1)
-      (if $space-neighbor-p
-          (trem-fly-delete-spaces)
-        (progn (trem-delete-blank-lines) (insert " "))))
-     ((eq $eol-count 2)
-      (if $space-neighbor-p
-          (trem-fly-delete-spaces)
-        (progn
-          (trem-delete-blank-lines)
-          (insert "\n"))))
-     ((> $eol-count 2)
-      (if $space-neighbor-p
-          (trem-fly-delete-spaces)
-        (progn
-          (goto-char $p2)
-          (search-backward "\n" )
-          (delete-region $p1 (point))
-          (insert "\n"))))
-     (t (progn
-          (message "nothing done. logic error 40873. shouldn't reach here" ))))))
 
 (defun trem-toggle-mark ()
   "Set mark if it's inactive, deactivate it if it's active."
@@ -583,63 +516,6 @@ If `universal-argument' is called first, use the number value for min length of 
           (trem-reformat-whitespaces-to-one-space $p1 $p2)))
       (put this-command 'is-longline-p (not is-longline-p)))))
 
-(defun trem-user-buffer-p (bname)
-  "Return t if current buffer is a user buffer, else nil.
-Typically, if buffer name starts with *, it's not considered a user buffer.
-This function is used by buffer switching command and close buffer command, so that next buffer shown is a user buffer.
-REWRITE IT!"
-  (interactive)
-  (cond
-   ((string-equal "*eshell*" bname) t)
-   ((string-equal "*ansi-term*" bname) t)
-   ((string-equal "*scratch*" bname) t)
-   ((string-equal "*term*" bname) t)
-   ((string-equal "*" (substring bname 0 1)) nil)
-   ((string-equal " *" (substring bname 0 2)) nil)
-   (t t)))
-
-(defun trem-next-user-buffer ()
-  "Switch to the next user buffer.
-“user buffer” is determined by `trem-user-buffer-q'."
-  (interactive)
-  (next-buffer)
-  (let ((i 0))
-    (while (< i 20)
-      (if (not (trem-user-buffer-p (buffer-name)))
-          (progn (next-buffer)
-                 (setq i (1+ i)))
-        (progn (setq i 100))))))
-
-(defun trem-previous-user-buffer ()
-  "Switch to the previous user buffer.
-“user buffer” is determined by `trem-user-buffer-q'."
-  (interactive)
-  (previous-buffer)
-  (let ((i 0))
-    (while (< i 20)
-      (if (not (trem-user-buffer-p (buffer-name)))
-          (progn (previous-buffer)
-                 (setq i (1+ i)))
-        (progn (setq i 100))))))
-
-(defun trem-next-emacs-buffer ()
-  "Switch to the next emacs buffer.
-“emacs buffer” here is buffer whose name starts with *."
-  (interactive)
-  (next-buffer)
-  (let ((i 0))
-    (while (and (not (string-equal "*" (substring (buffer-name) 0 1))) (< i 20))
-      (setq i (1+ i)) (next-buffer))))
-
-(defun trem-previous-emacs-buffer ()
-  "Switch to the previous emacs buffer.
-“emacs buffer” here is buffer whose name starts with *."
-  (interactive)
-  (previous-buffer)
-  (let ((i 0))
-    (while (and (not (string-equal "*" (substring (buffer-name) 0 1))) (< i 20))
-      (setq i (1+ i)) (previous-buffer))))
-
 (defun trem-clean-empty-lines ()
   "Replace repeated blank lines to just 1.
 Works on whole buffer or text selection, respects `narrow-to-region'."
@@ -655,7 +531,6 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
           (goto-char (point-min))
           (while (re-search-forward "\n\n\n+" nil "move")
             (replace-match "\n\n")))))))
-
 
 (defun trem-kill-forward-bracket-text ()
   (interactive)
@@ -740,67 +615,6 @@ Works on whole buffer or text selection, respects `narrow-to-region'."
   (interactive)
   (insert " "))
 
-(defun trem-check-parens-balance ()
-  "Check if there are unbalanced parentheses/brackets/quotes in current bufffer or selection.
-If so, place cursor there, print error to message buffer."
-  (interactive)
-  (let* (
-         ($bracket-alist
-          '( (?“ . ?”) (?‹ . ?›) (?« . ?») (?【 . ?】) (?〖 . ?〗) (?〈 . ?〉) (?《 . ?》) (?「 . ?」) (?『 . ?』) (?{ . ?}) (?\[ . ?\]) (?\( . ?\))))
-         ;; regex string of all pairs to search.
-         ($bregex
-          (let (($tempList nil))
-            (mapc
-             (lambda (x)
-               (push (char-to-string (car x)) $tempList)
-               (push (char-to-string (cdr x)) $tempList))
-             $bracket-alist)
-            (regexp-opt $tempList )))
-         $p1
-         $p2
-         ;; each entry is a vector [char position]
-         ($stack '())
-         ($char nil)
-         $pos
-         $is-closing-char-p
-         $matched-open-char
-         )
-    (if (region-active-p)
-        (setq $p1 (region-beginning) $p2 (region-end))
-      (setq $p1 (point-min) $p2 (point-max)))
-
-    (save-excursion
-      (save-restriction
-        (narrow-to-region $p1 $p2)
-        (progn
-          (goto-char 1)
-          (while (re-search-forward $bregex nil "move")
-            (setq $pos (point))
-            (setq $char (char-before))
-            (progn
-              (setq $is-closing-char-p (rassoc $char $bracket-alist))
-              (if $is-closing-char-p
-                  (progn
-                    (setq $matched-open-char
-                          (if $is-closing-char-p
-                              (car $is-closing-char-p)
-                            (error "logic error 64823. The char %s has no matching pair."
-                                   (char-to-string $char))))
-                    (if $stack
-                        (if (eq (aref (car $stack) 0) $matched-open-char )
-                            (pop $stack)
-                          (push (vector $char $pos) $stack ))
-                      (progn
-                        (goto-char $pos)
-                        (error "First mismtach found. the char %s has no matching pair."
-                               (char-to-string $char)))))
-                (push (vector $char $pos) $stack ))))
-          (if $stack
-              (progn
-                (goto-char (aref (car $stack) 1))
-                (message "Mismtach found. The char %s has no matching pair." $stack))
-            (print "All brackets/quotes match.")))))))
-
 (defun trem-change ()
   "Kill forward and exit CMD mode"
   (interactive)
@@ -845,15 +659,6 @@ If so, place cursor there, print error to message buffer."
       (overlay-put (make-overlay (region-beginning)
 				 (region-end))
 		   'face 'highlight))))
-
-(defun trem-choose-buffer (buf)
-  (interactive
-   (list
-    (ido-completing-read "Goto buffer: "
-			 (remove-if-not #'trem-user-buffer-p
-					(mapcar (lambda (b) (buffer-name b))
-						(buffer-list))))))
-  (switch-to-buffer buf))
 
 (defvar trem-key-pairs (cl-mapcar 'cons
 			"qwertyuiop[]asdfghjkl;'zxcvbnm,.QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>#"	
@@ -904,13 +709,13 @@ If so, place cursor there, print error to message buffer."
 
     (bnd-1 "h" #'trem-beginning-of-line-or-block)
     (bnd-1 ";" #'trem-end-of-line-or-block)
-
+    (bnd-1 "g" #'beginning-of-buffer)
+    
     ;; fast marking
     (bnd-1 "d" #'trem-toggle-mark)
     (bnd-1 "e" #'er/expand-region)
     (bnd-1 "7" #'trem-mark-line)
-    (bnd-1 "8" #'trem-mark-block)
-    (bnd-1 "9" #'mark-whole-buffer)  
+    (bnd-1 "8" #'mark-paragraph)
     
     ;; recenter/focus, alt scrolling
     (bnd-1 "a" #'recenter-top-bottom)
@@ -926,15 +731,15 @@ If so, place cursor there, print error to message buffer."
     (bnd-1 "c" #'kill-ring-save)
     (bnd-1 "v" #'yank)
     (bnd-1 "t" #'undo)
-    (bnd-1 "y" #'repeat)
+    (bnd-1 "y" #'trem-append-at-eol)
     (bnd-1 "z" #'comment-region)
     (bnd-1 "b" #'trem-toggle-case)
-    (bnd-1 "0" #'helm-occur)
+    (bnd-1 "9" #'trem-open-below)
+    (bnd-1 "0" #'trem-open-above)
     (bnd-1 "p" #'trem-replace-selection)
     
     ;; fast execution
     (bnd-1 "x" #'helm-M-x)
-    (bnd-1 "g" #'keyboard-quit)
     
     ;; fast window management
     (bnd-1 "1" #'make-frame)
@@ -959,9 +764,6 @@ If so, place cursor there, print error to message buffer."
     (define-key isearch-mode-map (kbd "<f6>") #'isearch-repeat-backward)
     (define-key isearch-mode-map (kbd "<f8>") #'isearch-repeat-forward)
 
-    ;; unused keys are blocked
-
-
     ;; prefix for 2-keystroke commands
     (bnd-1 "SPC" 'trem-mode-map-leadkey)
     
@@ -975,19 +777,22 @@ If so, place cursor there, print error to message buffer."
     (bnd-2 "m" #'mc/edit-beginnings-of-lines)
     (bnd-2 "h" #'trem-toggle-highlight)
     (bnd-2 "7" #'trem-reformat-lines)
+    (bnd-2 "d" #'mark-whole-buffer)
     
     ;; advanced navigation
     (bnd-2 "i" #'beginning-of-buffer)
     (bnd-2 "k" #'end-of-buffer)
     (bnd-2 "l" #'goto-line)
-    (bnd-2 "u" #'trem-check-parens-balance)
-    
+    (bnd-2 "g" #'end-of-buffer)
+
     ;; uncomment region
     (bnd-2 "z" #'uncomment-region)
 
     ;; mode specific buffer/region evaluation
     (bnd-2 "c" #'trem-eval-buffer)
     (bnd-2 "e" #'trem-eval-region)
+
+    (bnd-2 "x" #'repeat)
     
     ;; buffer/file management
     (bnd-2 "o" #'helm-find-files)
